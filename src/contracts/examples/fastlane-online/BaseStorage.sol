@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/SolverOperation.sol";
+import "../../types/SolverOperation.sol";
 
-import { Reputation } from "src/contracts/examples/fastlane-online/FastLaneTypes.sol";
+import { Reputation } from "./FastLaneTypes.sol";
 
 contract BaseStorage {
     error FLOnline_NotUnlocked();

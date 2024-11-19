@@ -1,14 +1,15 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
 
-import { ExecutionPhase } from "src/contracts/types/LockTypes.sol";
-import { SAFE_USER_TRANSFER, SAFE_DAPP_TRANSFER } from "src/contracts/libraries/SafetyBits.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
-import "src/contracts/types/SolverOperation.sol";
+import { IAtlas } from "../interfaces/IAtlas.sol";
+
+import { ExecutionPhase } from "../types/LockTypes.sol";
+import { SAFE_USER_TRANSFER, SAFE_DAPP_TRANSFER } from "../libraries/SafetyBits.sol";
+import { AtlasErrors } from "../types/AtlasErrors.sol";
+import "../types/SolverOperation.sol";
 
 contract Base {
     address public immutable ATLAS;

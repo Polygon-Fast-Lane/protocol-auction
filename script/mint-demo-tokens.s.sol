@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-import { DeployBaseScript } from "script/base/deploy-base.s.sol";
-import { Token } from "src/contracts/helpers/DemoToken.sol";
+import { DeployBaseScript } from "./base/deploy-base.s.sol";
+import { Token } from "../src/contracts/helpers/DemoToken.sol";
 import { WETH } from "solady/tokens/WETH.sol";
 
 contract MintDemoTokensScript is DeployBaseScript {

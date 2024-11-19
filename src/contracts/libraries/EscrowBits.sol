@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/EscrowTypes.sol";
+import "../types/EscrowTypes.sol";
 
 library EscrowBits {
     // Bundler's Fault - solver doesn't owe any gas refund. SolverOp isn't executed

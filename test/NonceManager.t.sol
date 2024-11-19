@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-import { NonceManager } from "src/contracts/atlas/NonceManager.sol";
-import { DAppConfig, CallConfig } from "src/contracts/types/ConfigTypes.sol";
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
-import { DAppOperation } from "src/contracts/types/DAppOperation.sol";
-import { ValidCallsResult } from "src/contracts/types/ValidCalls.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
+import { NonceManager } from "../src/contracts/atlas/NonceManager.sol";
+import { DAppConfig, CallConfig } from "../src/contracts/types/ConfigTypes.sol";
+import { UserOperation } from "../src/contracts/types/UserOperation.sol";
+import { SolverOperation } from "../src/contracts/types/SolverOperation.sol";
+import { DAppOperation } from "../src/contracts/types/DAppOperation.sol";
+import { ValidCallsResult } from "../src/contracts/types/ValidCalls.sol";
+import { AtlasVerification } from "../src/contracts/atlas/AtlasVerification.sol";
 import { AtlasVerificationBase } from "./AtlasVerification.t.sol";
 
 contract MockNonceManager is NonceManager {

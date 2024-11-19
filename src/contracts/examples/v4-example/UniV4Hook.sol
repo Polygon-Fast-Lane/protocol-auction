@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 // V4 Imports
 import { IPoolManager } from "./IPoolManager.sol";
@@ -8,13 +8,13 @@ import { IHooks } from "./IHooks.sol";
 // Atlas Imports
 import { V4DAppControl } from "./V4DAppControl.sol";
 
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
-import { SafetyBits } from "src/contracts/libraries/SafetyBits.sol";
+import { IAtlas } from "../../interfaces/IAtlas.sol";
+import { SafetyBits } from "../../libraries/SafetyBits.sol";
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/LockTypes.sol";
+import "../../types/SolverOperation.sol";
+import "../../types/UserOperation.sol";
+import "../../types/ConfigTypes.sol";
+import "../../types/LockTypes.sol";
 
 // NOTE: Uniswap V4 is unique in that it would not require a frontend integration.
 // Instead, hooks can be used to enforce that the proceeds of the MEV auctions are

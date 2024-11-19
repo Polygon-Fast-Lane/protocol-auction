@@ -5,7 +5,7 @@
   block_gas_limit = 300000000
   gas_limit = 3000000000
   gas_price = 1500000000
-  solc_version = "0.8.25"
+  solc_version = "0.8.28"
   evm_version = "cancun"
   isolate = false
   gas_reports = ["Atlas", "AtlasVerification", "Simulator", "Sorter", "ExecutionEnvironment"]

@@ -1,18 +1,18 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
-import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
-import { IAtlasVerification } from "src/contracts/interfaces/IAtlasVerification.sol";
+import { IAtlas } from "../interfaces/IAtlas.sol";
+import { IDAppControl } from "../interfaces/IDAppControl.sol";
+import { IAtlasVerification } from "../interfaces/IAtlasVerification.sol";
 
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
-import { AccountingMath } from "src/contracts/libraries/AccountingMath.sol";
-import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
-import { AtlasConstants } from "src/contracts/types/AtlasConstants.sol";
+import { CallBits } from "../libraries/CallBits.sol";
+import { AccountingMath } from "../libraries/AccountingMath.sol";
+import { CallVerification } from "../libraries/CallVerification.sol";
+import { AtlasConstants } from "../types/AtlasConstants.sol";
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/ConfigTypes.sol";
 
 contract Sorter is AtlasConstants {
     using CallBits for uint32;

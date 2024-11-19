@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { SolverBase } from "src/contracts/solver/SolverBase.sol";
+import { SolverBase } from "../../solver/SolverBase.sol";
 
 // Flashbots opensource repo
 import { BlindBackrun } from "./BlindBackrun/BlindBackrun.sol";

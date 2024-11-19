@@ -1,22 +1,22 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { EIP712 } from "openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
 import { ECDSA } from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import { SignatureChecker } from "openzeppelin-contracts/contracts/utils/cryptography/SignatureChecker.sol";
-import { DAppIntegration } from "src/contracts/atlas/DAppIntegration.sol";
-import { NonceManager } from "src/contracts/atlas/NonceManager.sol";
+import { DAppIntegration } from "./DAppIntegration.sol";
+import { NonceManager } from "./NonceManager.sol";
 
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
-import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
-import { AtlasConstants } from "src/contracts/types/AtlasConstants.sol";
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/DAppOperation.sol";
-import "src/contracts/types/EscrowTypes.sol";
-import "src/contracts/types/ValidCalls.sol";
+import { CallBits } from "../libraries/CallBits.sol";
+import { CallVerification } from "../libraries/CallVerification.sol";
+import { AtlasErrors } from "../types/AtlasErrors.sol";
+import { AtlasConstants } from "../types/AtlasConstants.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/ConfigTypes.sol";
+import "../types/DAppOperation.sol";
+import "../types/EscrowTypes.sol";
+import "../types/ValidCalls.sol";
 
 /// @title AtlasVerification
 /// @author FastLane Labs

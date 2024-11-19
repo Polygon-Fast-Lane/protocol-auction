@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-import { SafetyLocks } from "src/contracts/atlas/SafetyLocks.sol";
-import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
+import { SafetyLocks } from "../src/contracts/atlas/SafetyLocks.sol";
+import { AtlasEvents } from "../src/contracts/types/AtlasEvents.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
 
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/LockTypes.sol";
+import "../src/contracts/types/ConfigTypes.sol";
+import "../src/contracts/types/LockTypes.sol";
 
 contract MockSafetyLocks is SafetyLocks {
-    constructor() SafetyLocks(0, address(0), address(0), address(0), address(0)) { }
+    constructor() SafetyLocks(0, 1000000, 1000000, address(0), address(0), address(0), address(0)) { }
 
     function initializeLock(
         address executionEnvironment,
@@ -56,58 +56,58 @@ contract MockSafetyLocks is SafetyLocks {
         _setLockPhase(newPhase);
     }
 
-    function setClaims(uint256 _claims) external {
-        _setClaims(_claims);
+    function setSolverLock(uint256 newSolverLock) public {
+        t_solverLock = newSolverLock;
     }
 
-    function setWithdrawals(uint256 _withdrawals) external {
-        _setWithdrawals(_withdrawals);
+    function setSolverTo(address newSolverTo) public {
+        t_solverTo = newSolverTo;
     }
 
-    function setDeposits(uint256 _deposits) external {
-        _setDeposits(_deposits);
+    function setClaims(uint256 newClaims) public {
+        t_claims = newClaims;
     }
 
-    function setFees(uint256 _fees) external {
-        _setFees(_fees);
+    function setFees(uint256 newFees) public {
+        t_fees = newFees;
     }
 
-    function setWriteoffs(uint256 _writeoffs) external {
-        _setWriteoffs(_writeoffs);
+    function setWriteoffs(uint256 newWriteoffs) public {
+        t_writeoffs = newWriteoffs;
     }
 
-     function setSolverLock(uint256 newSolverLock) external {
-        _setSolverLock(newSolverLock);
+    function setWithdrawals(uint256 newWithdrawals) public {
+        t_withdrawals = newWithdrawals;
     }
 
-    function setSolverTo(address newSolverTo) external {
-        _setSolverTo(newSolverTo);
+    function setDeposits(uint256 newDeposits) public {
+        t_deposits = newDeposits;
+    }
+
+    // Transient Var View Functions
+
+    function claims() external view returns (uint256) {
+        return t_claims;
+    }
+
+    function fees() external view returns (uint256) {
+        return t_fees;
+    }
+
+    function writeoffs() external view returns (uint256) {
+        return t_writeoffs;
+    }
+
+    function withdrawals() external view returns (uint256) {
+        return t_withdrawals;
+    }
+
+    function deposits() external view returns (uint256) {
+        return t_deposits;
     }
 
     function solverTo() external view returns (address) {
-        return _solverTo();
-    }
-
-    // View functions
-
-    function getClaims() external view returns (uint256) {
-        return claims();
-    }
-
-    function getFees() external view returns (uint256) {
-        return fees();
-    }
-
-    function getWriteoffs() external view returns (uint256) {
-        return writeoffs();
-    }
-
-    function getWithdrawals() external view returns (uint256) {
-        return withdrawals();
-    }
-
-    function getDeposits() external view returns (uint256) {
-        return deposits();
+        return t_solverTo;
     }
 }
 
@@ -158,7 +158,7 @@ contract SafetyLocksTest is Test {
 
         safetyLocks.setClaims(newClaims);
 
-        uint256 claims = safetyLocks.getClaims();
+        uint256 claims = safetyLocks.claims();
         assertEq(claims, newClaims);
     }
 
@@ -167,7 +167,7 @@ contract SafetyLocksTest is Test {
 
         safetyLocks.setWithdrawals(newWithdrawals);
 
-        uint256 withdrawals = safetyLocks.getWithdrawals();
+        uint256 withdrawals = safetyLocks.withdrawals();
         assertEq(withdrawals, newWithdrawals);
     }
 
@@ -176,7 +176,7 @@ contract SafetyLocksTest is Test {
 
         safetyLocks.setDeposits(newDeposits);
 
-        uint256 deposits = safetyLocks.getDeposits();
+        uint256 deposits = safetyLocks.deposits();
         assertEq(deposits, newDeposits);
     }
 
@@ -185,7 +185,7 @@ contract SafetyLocksTest is Test {
 
         safetyLocks.setFees(newFees);
 
-        uint256 fees = safetyLocks.getFees();
+        uint256 fees = safetyLocks.fees();
         assertEq(fees, newFees);
     }
 
@@ -194,7 +194,7 @@ contract SafetyLocksTest is Test {
 
         safetyLocks.setWriteoffs(newWriteoffs);
 
-        uint256 writeoffs = safetyLocks.getWriteoffs();
+        uint256 writeoffs = safetyLocks.writeoffs();
         assertEq(writeoffs, newWriteoffs);
     }
 
@@ -245,11 +245,11 @@ contract SafetyLocksTest is Test {
         safetyLocks.setSolverLock(0x456);
 
         (address activeEnv, uint32 callConfig, uint8 phase) = safetyLocks.lock();
-        uint256 claims = safetyLocks.getClaims();
-        uint256 withdrawals = safetyLocks.getWithdrawals();
-        uint256 deposits = safetyLocks.getDeposits();
-        uint256 fees = safetyLocks.getFees();
-        uint256 writeoffs = safetyLocks.getWriteoffs();
+        uint256 claims = safetyLocks.claims();
+        uint256 withdrawals = safetyLocks.withdrawals();
+        uint256 deposits = safetyLocks.deposits();
+        uint256 fees = safetyLocks.fees();
+        uint256 writeoffs = safetyLocks.writeoffs();
         (address solverTo,,) = safetyLocks.solverLockData();
 
         assertEq(safetyLocks.isUnlocked(), false);

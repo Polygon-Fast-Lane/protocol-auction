@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { CallConfig } from "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/LockTypes.sol";
+import { CallConfig } from "../../types/ConfigTypes.sol";
+import "../../types/UserOperation.sol";
+import "../../types/SolverOperation.sol";
+import "../../types/LockTypes.sol";
 
 // Atlas DApp-Control Imports
-import { DAppControl } from "src/contracts/dapp/DAppControl.sol";
-import { ChainlinkAtlasWrapper } from "src/contracts/examples/oev-example/ChainlinkAtlasWrapperAlt.sol";
+import { DAppControl } from "../../dapp/DAppControl.sol";
+import { ChainlinkAtlasWrapper } from "./ChainlinkAtlasWrapperAlt.sol";
 
 // Role enum as per Chainlink's OffchainAggregatorBilling.sol contract
 enum Role {

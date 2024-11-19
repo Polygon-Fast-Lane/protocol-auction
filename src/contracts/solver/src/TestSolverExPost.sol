@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import { SolverBase } from "src/contracts/solver/SolverBase.sol";
+import { SolverBase } from "../../solver/SolverBase.sol";
 
 // Flashbots opensource repo
 import { BlindBackrun } from "./BlindBackrun/BlindBackrun.sol";

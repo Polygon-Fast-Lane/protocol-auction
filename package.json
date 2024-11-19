@@ -23,14 +23,19 @@
       
       "deploy-atlas-bsc": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BSC_RPC_URL} --legacy --broadcast --etherscan-api-key ${BSCSCAN_API_KEY} --verify --delay 30",
       "deploy-atlas-bsc-testnet": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BSC_TESTNET_RPC_URL} --legacy --broadcast --etherscan-api-key ${BSCSCAN_API_KEY} --verify --delay 30",
+
+      "deploy-atlas-base-sepolia": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BASE_SEPOLIA_RPC_URL} --legacy --broadcast --etherscan-api-key ${BASESCAN_API_KEY} --verify --delay 30",
       
       "deploy-atlas-sepolia": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${SEPOLIA_RPC_URL} --legacy --gas-estimate-multiplier 150 --broadcast --etherscan-api-key ${ETHERSCAN_API_KEY} --verify --delay 30",
       "deploy-atlas-local": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --fork-url http://localhost:8545 --broadcast",
 
+      "deploy-atlas-base": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BASE_RPC_URL} --legacy --broadcast --etherscan-api-key ${BASESCAN_API_KEY} --verify --delay 30",
+      
       "deploy-swap-intent-sepolia": "source .env && forge script script/deploy-swap-intent-control.s.sol:DeploySwapIntentControlScript --rpc-url ${SEPOLIA_RPC_URL} --broadcast --etherscan-api-key ${ETHERSCAN_API_KEY} --verify",
       "deploy-swap-intent-local": "source .env && forge script script/deploy-swap-intent-control.s.sol:DeploySwapIntentControlScript --fork-url http://localhost:8545 --broadcast",
 
       "deploy-demo-tokens-sepolia": "source .env && forge script script/deploy-demo-tokens.s.sol:DeployDemoTokensScript --rpc-url ${SEPOLIA_RPC_URL} --broadcast --etherscan-api-key ${ETHERSCAN_API_KEY} --verify",
+      "deploy-demo-tokens-base-sepolia": "source .env && forge script script/deploy-demo-tokens-v3.s.sol:DeployDemoTokensScript --rpc-url ${BASE_SEPOLIA_RPC_URL} --broadcast --etherscan-api-key ${BASESCAN_API_KEY} --verify",
 
       "mint-demo-tokens-sepolia": "source .env && forge script script/mint-demo-tokens.s.sol:MintDemoTokensScript --rpc-url ${SEPOLIA_RPC_URL} --broadcast --etherscan-api-key ${ETHERSCAN_API_KEY} --verify",
 
@@ -59,6 +64,8 @@
       "deploy-solver": "source .env && forge script script/deploy-solver.s.sol:DeploySimpleRFQSolverScript --fork-url http://localhost:8545 --broadcast --non-interactive",
       "solver-deposit": "source .env && forge script script/solver-deposit.s.sol:SolverAtlasDepositScript --fork-url http://localhost:8545 --broadcast --non-interactive",
       "setup-demo": "npm run deploy-atlas-swap-intent-tx-builder && npm run deploy-solver && npm run solver-deposit",
+
+      "deploy-gas-calculator-base": "source .env && forge script script/deploy-gas-calculator.s.sol:DeployGasCalculatorScript --rpc-url ${BASE_RPC_URL} --broadcast --etherscan-api-key ${BASESCAN_API_KEY} --verify",
 
       "atlas-addr": "echo 'ATLAS:' && jq -r '.ATLAS' deployments.json",
       "swap-intent-addr": "echo 'SWAP INTENT DAPP CONTROL:' && jq -r '.SWAP_INTENT_DAPP_CONTROL' deployments.json",

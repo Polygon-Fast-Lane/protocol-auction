@@ -1,29 +1,60 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 library AccountingMath {
-    // Gas Accounting public constants
-    uint256 internal constant _ATLAS_SURCHARGE_RATE = 1_000_000; // out of 10_000_000 = 10%
-    uint256 internal constant _BUNDLER_SURCHARGE_RATE = 1_000_000; // out of 10_000_000 = 10%
+    uint256 internal constant _MAX_BUNDLER_REFUND_RATE = 8_000_000; // out of 10_000_000 = 80%
     uint256 internal constant _SOLVER_GAS_LIMIT_BUFFER_PERCENTAGE = 500_000; // out of 10_000_000 = 5%
     uint256 internal constant _SCALE = 10_000_000; // 10_000_000 / 10_000_000 = 100%
     uint256 internal constant _FIXED_GAS_OFFSET = 85_000;
 
-    function withBundlerSurcharge(uint256 amount) internal pure returns (uint256 adjustedAmount) {
-        adjustedAmount = amount * (_SCALE + _BUNDLER_SURCHARGE_RATE) / _SCALE;
+    function withSurcharge(uint256 amount, uint256 surchargeRate) internal pure returns (uint256 adjustedAmount) {
+        adjustedAmount = amount * (_SCALE + surchargeRate) / _SCALE;
     }
 
-    function withoutBundlerSurcharge(uint256 amount) internal pure returns (uint256 unadjustedAmount) {
-        unadjustedAmount = amount * _SCALE / (_SCALE + _BUNDLER_SURCHARGE_RATE);
+    function withoutSurcharge(uint256 amount, uint256 surchargeRate) internal pure returns (uint256 unadjustedAmount) {
+        unadjustedAmount = amount * _SCALE / (_SCALE + surchargeRate);
     }
 
-    function withAtlasAndBundlerSurcharges(uint256 amount) internal pure returns (uint256 adjustedAmount) {
-        adjustedAmount = amount * (_SCALE + _ATLAS_SURCHARGE_RATE + _BUNDLER_SURCHARGE_RATE) / _SCALE;
+    function withSurcharges(
+        uint256 amount,
+        uint256 atlasSurchargeRate,
+        uint256 bundlerSurchargeRate
+    )
+        internal
+        pure
+        returns (uint256 adjustedAmount)
+    {
+        adjustedAmount = amount * (_SCALE + atlasSurchargeRate + bundlerSurchargeRate) / _SCALE;
     }
 
     // gets the Atlas surcharge from an unadjusted amount
-    function getAtlasSurcharge(uint256 amount) internal pure returns (uint256 surcharge) {
-        surcharge = amount * _ATLAS_SURCHARGE_RATE / _SCALE;
+    function getSurcharge(
+        uint256 unadjustedAmount,
+        uint256 surchargeRate
+    )
+        internal
+        pure
+        returns (uint256 surchargeAmount)
+    {
+        surchargeAmount = unadjustedAmount * surchargeRate / _SCALE;
+    }
+
+    function getPortionFromTotalSurcharge(
+        uint256 totalSurcharge,
+        uint256 targetSurchargeRate,
+        uint256 totalSurchargeRate
+    )
+        internal
+        pure
+        returns (uint256 surchargePortion)
+    {
+        surchargePortion = totalSurcharge * targetSurchargeRate / totalSurchargeRate;
+    }
+
+    // NOTE: This max should only be applied when there are no winning solvers.
+    // Set to 80% of the metacall gas cost, because the remaining 20% can be collected through storage refunds.
+    function maxBundlerRefund(uint256 metacallGasCost) internal pure returns (uint256 maxRefund) {
+        maxRefund = metacallGasCost * _MAX_BUNDLER_REFUND_RATE / _SCALE;
     }
 
     function solverGasLimitScaledDown(

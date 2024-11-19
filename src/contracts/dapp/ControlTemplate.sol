@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/ConfigTypes.sol";
+import { AtlasErrors } from "../types/AtlasErrors.sol";
 
 abstract contract DAppControlTemplate {
     uint32 internal constant DEFAULT_SOLVER_GAS_LIMIT = 1_000_000;

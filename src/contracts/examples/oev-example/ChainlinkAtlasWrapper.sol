@@ -1,13 +1,10 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";
 import { SafeERC20, IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-    IChainlinkAtlasWrapper,
-    AggregatorV2V3Interface
-} from "src/contracts/examples/oev-example/IChainlinkAtlasWrapper.sol";
-import { IChainlinkDAppControl } from "src/contracts/examples/oev-example/IChainlinkDAppControl.sol";
+import { IChainlinkAtlasWrapper, AggregatorV2V3Interface } from "./IChainlinkAtlasWrapper.sol";
+import { IChainlinkDAppControl } from "./IChainlinkDAppControl.sol";
 
 // A wrapper contract for a specific Chainlink price feed, used by Atlas to capture Oracle Extractable Value (OEV).
 // Each MEV-generating protocol needs their own wrapper for each Chainlink price feed they use.

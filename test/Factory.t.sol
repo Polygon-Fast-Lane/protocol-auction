@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
-import { Factory } from "src/contracts/atlas/Factory.sol";
-import { ExecutionEnvironment } from "src/contracts/common/ExecutionEnvironment.sol";
+import { Atlas } from "../src/contracts/atlas/Atlas.sol";
+import { AtlasVerification } from "../src/contracts/atlas/AtlasVerification.sol";
+import { Factory } from "../src/contracts/atlas/Factory.sol";
+import { FactoryLib } from "../src/contracts/atlas/FactoryLib.sol";
+import { ExecutionEnvironment } from "../src/contracts/common/ExecutionEnvironment.sol";
 import { DummyDAppControl, CallConfigBuilder } from "./base/DummyDAppControl.sol";
-import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
+import { AtlasEvents } from "../src/contracts/types/AtlasEvents.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
 
-import "src/contracts/types/UserOperation.sol";
+import "../src/contracts/types/UserOperation.sol";
 
 import "./base/TestUtils.sol";
 
-contract MockFactory is Factory, Test {
-    constructor(address _executionTemplate) Factory(_executionTemplate) { }
+contract MockFactory is Factory {
+    constructor(address factoryLib) Factory(factoryLib) { }
 
     function getOrCreateExecutionEnvironment(UserOperation calldata userOp)
         external
@@ -32,6 +33,10 @@ contract MockFactory is Factory, Test {
     function baseSalt() external view returns (bytes32) {
         return _FACTORY_BASE_SALT;
     }
+}
+
+contract MockFactoryLib is FactoryLib {
+    constructor(address executionTemplate) FactoryLib(executionTemplate) { }
 
     function getMimicCreationCode(
         address user,
@@ -40,16 +45,20 @@ contract MockFactory is Factory, Test {
     )
         external
         view
-        returns (bytes memory creationCode) {
-            require(EXECUTION_ENV_TEMPLATE != address(0), "TEST: Execution environment template not set");
-            return _getMimicCreationCode(user, control, callConfig);
-        }
+        returns (bytes memory)
+    {
+        return _getMimicCreationCode(user, control, callConfig);
+    }
 }
 
 contract FactoryTest is Test {
+    uint256 DEFAULT_ATLAS_SURCHARGE_RATE = 1_000_000; // 10%
+    uint256 DEFAULT_BUNDLER_SURCHARGE_RATE = 1_000_000; // 10%
+
     Atlas public atlas;
     AtlasVerification public atlasVerification;
     MockFactory public mockFactory;
+    MockFactoryLib public factoryLib;
     DummyDAppControl public dAppControl;
 
     address public user;
@@ -57,33 +66,44 @@ contract FactoryTest is Test {
     function setUp() public {
         user = address(999);
         address deployer = address(333);
-        address expectedAtlasAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 0);
-        address expectedAtlasVerificationAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 1);
-        address expectedFactoryAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 2);
-        bytes32 salt = keccak256(abi.encodePacked(block.chainid, expectedFactoryAddr));
-        ExecutionEnvironment execEnvTemplate = new ExecutionEnvironment{ salt: salt }(expectedFactoryAddr);
-        
+
+        address expectedFactoryLibAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 1);
+        address expectedAtlasAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 2);
+        address expectedAtlasVerificationAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 3);
+        address expectedFactoryAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 4);
+
         vm.startPrank(deployer);
+        ExecutionEnvironment execEnvTemplate = new ExecutionEnvironment(expectedFactoryAddr);
+
+        factoryLib = new MockFactoryLib(address(execEnvTemplate));
+        assertEq(address(factoryLib), expectedFactoryLibAddr, "FactoryLib address mismatch");
+
         atlas = new Atlas({
             escrowDuration: 64,
+            atlasSurchargeRate: DEFAULT_ATLAS_SURCHARGE_RATE,
+            bundlerSurchargeRate: DEFAULT_BUNDLER_SURCHARGE_RATE,
             verification: expectedAtlasVerificationAddr,
             simulator: address(0),
-            executionTemplate: address(execEnvTemplate),
+            factoryLib: address(factoryLib),
             initialSurchargeRecipient: deployer,
             l2GasCalculator: address(0)
         });
         assertEq(address(atlas), expectedAtlasAddr, "Atlas address mismatch");
+
         atlasVerification = new AtlasVerification(address(atlas));
         assertEq(address(atlasVerification), expectedAtlasVerificationAddr, "AtlasVerification address mismatch");
-        mockFactory = new MockFactory({ _executionTemplate: address(execEnvTemplate) });
+
+        mockFactory = new MockFactory({ factoryLib: address(factoryLib) });
         assertEq(address(mockFactory), expectedFactoryAddr, "Factory address mismatch");
+
         dAppControl = new DummyDAppControl(expectedAtlasAddr, deployer, CallConfigBuilder.allFalseCallConfig());
         vm.stopPrank();
     }
 
     function test_createExecutionEnvironment() public {
         uint32 callConfig = dAppControl.CALL_CONFIG();
-        bytes memory creationCode = mockFactory.getMimicCreationCode(user, address(dAppControl), callConfig);
+        // NOTE: getMimicCreationCode is now in FactoryLib
+        bytes memory creationCode = factoryLib.getMimicCreationCode(user, address(dAppControl), callConfig);
         address expectedExecutionEnvironment = address(
             uint160(
                 uint256(
@@ -147,7 +167,7 @@ contract FactoryTest is Test {
         assertEq(predictedEE, actualEE, "Predicted and actual EE addrs should match 2");
 
         (predictedEE,, exists) = mockFactory.getExecutionEnvironment(user, address(dAppControl));
-        
+
         assertTrue(exists, "Execution environment should exist - exist should return true");
         assertFalse(predictedEE.code.length == 0, "Execution environment should exist - code at addr");
         assertEq(predictedEE, actualEE, "Predicted and actual EE addrs should match 2");
@@ -162,6 +182,10 @@ contract FactoryTest is Test {
         uint32 _callConfig = 789;
 
         bytes32 expectedComputeSalt = keccak256(abi.encodePacked(baseSalt, _user, _control, _callConfig));
-        assertEq(expectedComputeSalt, mockFactory.computeSalt(_user, _control, _callConfig), "user salt not computed correctly - depends on base salt");
+        assertEq(
+            expectedComputeSalt,
+            mockFactory.computeSalt(_user, _control, _callConfig),
+            "user salt not computed correctly - depends on base salt"
+        );
     }
 }

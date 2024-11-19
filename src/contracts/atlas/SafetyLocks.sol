@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { Storage } from "./Storage.sol";
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/EscrowTypes.sol";
-import "src/contracts/types/LockTypes.sol";
+import { CallBits } from "../libraries/CallBits.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/ConfigTypes.sol";
+import "../types/EscrowTypes.sol";
+import "../types/LockTypes.sol";
 
 /// @title SafetyLocks
 /// @author FastLane Labs
@@ -18,12 +18,22 @@ abstract contract SafetyLocks is Storage {
 
     constructor(
         uint256 escrowDuration,
+        uint256 atlasSurchargeRate,
+        uint256 bundlerSurchargeRate,
         address verification,
         address simulator,
         address initialSurchargeRecipient,
         address l2GasCalculator
     )
-        Storage(escrowDuration, verification, simulator, initialSurchargeRecipient, l2GasCalculator)
+        Storage(
+            escrowDuration,
+            atlasSurchargeRate,
+            bundlerSurchargeRate,
+            verification,
+            simulator,
+            initialSurchargeRecipient,
+            l2GasCalculator
+        )
     { }
 
     /// @notice Sets the Atlas lock to the specified execution environment.

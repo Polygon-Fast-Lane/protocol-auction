@@ -1,21 +1,18 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
-
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
-
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
+pragma solidity 0.8.28;
 
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/LockTypes.sol";
-import "src/contracts/types/DAppOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/ValidCalls.sol";
-import "src/contracts/types/EscrowTypes.sol";
-
-import { Result } from "src/contracts/interfaces/ISimulator.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/LockTypes.sol";
+import "../types/DAppOperation.sol";
+import "../types/ConfigTypes.sol";
+import "../types/ValidCalls.sol";
+import "../types/EscrowTypes.sol";
+import { AtlasErrors } from "../types/AtlasErrors.sol";
+import { Result } from "../interfaces/ISimulator.sol";
+import { IAtlas } from "../interfaces/IAtlas.sol";
 
 contract Simulator is AtlasErrors {
     address public immutable deployer;
@@ -147,7 +144,7 @@ contract Simulator is AtlasErrors {
         payable
     {
         if (msg.sender != address(this)) revert InvalidEntryFunction();
-        if (!IAtlas(atlas).metacall{ value: msg.value }(userOp, solverOps, dAppOp)) {
+        if (!IAtlas(atlas).metacall{ value: msg.value }(userOp, solverOps, dAppOp, address(0))) {
             revert NoAuctionWinner(); // should be unreachable
         }
         revert SimulationPassed();

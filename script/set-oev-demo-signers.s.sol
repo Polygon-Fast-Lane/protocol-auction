@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-import { DeployBaseScript } from "script/base/deploy-base.s.sol";
+import { DeployBaseScript } from "./base/deploy-base.s.sol";
 
-import { ChainlinkDAppControl } from "src/contracts/examples/oev-example/ChainlinkDAppControl.sol";
-import { ChainlinkAtlasWrapper } from "src/contracts/examples/oev-example/ChainlinkAtlasWrapper.sol";
+import { ChainlinkDAppControl } from "../src/contracts/examples/oev-example/ChainlinkDAppControl.sol";
+import { ChainlinkAtlasWrapper } from "../src/contracts/examples/oev-example/ChainlinkAtlasWrapper.sol";
 
-import { Token } from "src/contracts/helpers/DemoToken.sol";
-import { DemoLendingProtocol } from "src/contracts/helpers/DemoLendingProtocol.sol";
+import { Token } from "../src/contracts/helpers/DemoToken.sol";
+import { DemoLendingProtocol } from "../src/contracts/helpers/DemoLendingProtocol.sol";
 
 // For the Chainlink OEV demo, when its difficult to find a real `transmit()` tx with a low enough ETH price.
 // We replace the real Sepolia Chainlink ETH/USD signers with a set of test signers, in ChainlinkDAppControl.

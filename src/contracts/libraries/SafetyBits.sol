@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/LockTypes.sol";
+import "../types/LockTypes.sol";
 
 // NOTE: No user transfers allowed during AllocateValue
 uint8 constant SAFE_USER_TRANSFER = uint8(

@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/EscrowTypes.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/ConfigTypes.sol";
+import "../types/EscrowTypes.sol";
 
 interface IExecutionEnvironment {
     function preOpsWrapper(UserOperation calldata userOp) external returns (bytes memory preOpsData);

@@ -1,17 +1,18 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/DAppOperation.sol";
-import "src/contracts/types/LockTypes.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/DAppOperation.sol";
+import "../types/LockTypes.sol";
 
 interface IAtlas {
     // Atlas.sol
     function metacall(
         UserOperation calldata userOp,
         SolverOperation[] calldata solverOps,
-        DAppOperation calldata dAppOp
+        DAppOperation calldata dAppOp,
+        address gasRefundBeneficiary
     )
         external
         payable

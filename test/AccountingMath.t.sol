@@ -1,72 +1,87 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
-import "src/contracts/libraries/AccountingMath.sol";
+import "../src/contracts/libraries/AccountingMath.sol";
 
 contract AccountingMathTest is Test {
+    uint256 DEFAULT_ATLAS_SURCHARGE_RATE = 1_000_000; // 10%
+    uint256 DEFAULT_BUNDLER_SURCHARGE_RATE = 1_000_000; // 10%
+
     function testWithBundlerSurcharge() public {
-        assertEq(AccountingMath.withBundlerSurcharge(0), uint256(0));
-        assertEq(AccountingMath.withBundlerSurcharge(1), uint256(1));
-        assertEq(AccountingMath.withBundlerSurcharge(11), uint256(12));
-        assertEq(AccountingMath.withBundlerSurcharge(100), uint256(110));
-        assertEq(AccountingMath.withBundlerSurcharge(1e18), uint256(11e17));
+        assertEq(AccountingMath.withSurcharge(0, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0));
+        assertEq(AccountingMath.withSurcharge(1, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(1));
+        assertEq(AccountingMath.withSurcharge(11, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(12));
+        assertEq(AccountingMath.withSurcharge(100, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(110));
+        assertEq(AccountingMath.withSurcharge(1e18, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(11e17));
         vm.expectRevert();
-        AccountingMath.withBundlerSurcharge(type(uint256).max);
+        AccountingMath.withSurcharge(type(uint256).max, DEFAULT_BUNDLER_SURCHARGE_RATE);
     }
 
     function testWithoutBundlerSurcharge() public {
-        assertEq(AccountingMath.withoutBundlerSurcharge(0), uint256(0));
-        assertEq(AccountingMath.withoutBundlerSurcharge(1), uint256(0));
-        assertEq(AccountingMath.withoutBundlerSurcharge(12), uint256(10));
-        assertEq(AccountingMath.withoutBundlerSurcharge(110), uint256(100));
-        assertEq(AccountingMath.withoutBundlerSurcharge(11e17), uint256(1e18));
+        assertEq(AccountingMath.withoutSurcharge(0, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0));
+        assertEq(AccountingMath.withoutSurcharge(1, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0));
+        assertEq(AccountingMath.withoutSurcharge(12, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(10));
+        assertEq(AccountingMath.withoutSurcharge(110, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(100));
+        assertEq(AccountingMath.withoutSurcharge(11e17, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(1e18));
         vm.expectRevert();
-        AccountingMath.withoutBundlerSurcharge(type(uint256).max);
+        AccountingMath.withoutSurcharge(type(uint256).max, DEFAULT_BUNDLER_SURCHARGE_RATE);
     }
 
     function testWithAtlasAndBundlerSurcharges() public {
-        assertEq(AccountingMath.withAtlasAndBundlerSurcharges(0), uint256(0));
-        assertEq(AccountingMath.withAtlasAndBundlerSurcharges(1), uint256(1));
-        assertEq(AccountingMath.withAtlasAndBundlerSurcharges(10), uint256(12));
-        assertEq(AccountingMath.withAtlasAndBundlerSurcharges(100), uint256(120));
-        assertEq(AccountingMath.withAtlasAndBundlerSurcharges(1e18), uint256(12e17));
+        assertEq(
+            AccountingMath.withSurcharges(0, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0)
+        );
+        assertEq(
+            AccountingMath.withSurcharges(1, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(1)
+        );
+        assertEq(
+            AccountingMath.withSurcharges(10, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(12)
+        );
+        assertEq(
+            AccountingMath.withSurcharges(100, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE),
+            uint256(120)
+        );
+        assertEq(
+            AccountingMath.withSurcharges(1e18, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE),
+            uint256(12e17)
+        );
         vm.expectRevert();
-        AccountingMath.withAtlasAndBundlerSurcharges(type(uint256).max);
+        AccountingMath.withSurcharges(type(uint256).max, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE);
     }
 
     function testGetAtlasSurcharge() public {
-        assertEq(AccountingMath.getAtlasSurcharge(0), uint256(0));
-        assertEq(AccountingMath.getAtlasSurcharge(10), uint256(1));
-        assertEq(AccountingMath.getAtlasSurcharge(20), uint256(2));
-        assertEq(AccountingMath.getAtlasSurcharge(30), uint256(3));
-        assertEq(AccountingMath.getAtlasSurcharge(100), uint256(10));
-        assertEq(AccountingMath.getAtlasSurcharge(1_000_000), uint256(100_000));
-        assertEq(AccountingMath.getAtlasSurcharge(1e18), uint256(1e17));
+        assertEq(AccountingMath.getSurcharge(0, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(0));
+        assertEq(AccountingMath.getSurcharge(10, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(1));
+        assertEq(AccountingMath.getSurcharge(20, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(2));
+        assertEq(AccountingMath.getSurcharge(30, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(3));
+        assertEq(AccountingMath.getSurcharge(100, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(10));
+        assertEq(AccountingMath.getSurcharge(1_000_000, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(100_000));
+        assertEq(AccountingMath.getSurcharge(1e18, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(1e17));
         vm.expectRevert();
-        AccountingMath.getAtlasSurcharge(type(uint256).max);
+        AccountingMath.getSurcharge(type(uint256).max, DEFAULT_ATLAS_SURCHARGE_RATE);
     }
 
     function testSolverGasLimitScaledDown() public {
         assertEq(AccountingMath.solverGasLimitScaledDown(0, 100), uint256(0));
         assertEq(AccountingMath.solverGasLimitScaledDown(50, 100), uint256(47)); // 50 * 10_000_000 / 10_500_000
         assertEq(AccountingMath.solverGasLimitScaledDown(100, 200), uint256(95));
-        
+
         assertEq(AccountingMath.solverGasLimitScaledDown(200, 100), uint256(95));
         assertEq(AccountingMath.solverGasLimitScaledDown(300, 200), uint256(190));
-        
+
         assertEq(AccountingMath.solverGasLimitScaledDown(100, 100), uint256(95));
         assertEq(AccountingMath.solverGasLimitScaledDown(200, 200), uint256(190));
-        
-        assertEq(AccountingMath.solverGasLimitScaledDown(1_000_000, 500_000), uint256(476_190)); // 500_000 * 10_000_000 / 10_500_000
-        assertEq(AccountingMath.solverGasLimitScaledDown(1e18, 1e18), uint256(952380952380952380));
-        
+
+        assertEq(AccountingMath.solverGasLimitScaledDown(1_000_000, 500_000), uint256(476_190)); // 500_000 * 10_000_000
+            // / 10_500_000
+        assertEq(AccountingMath.solverGasLimitScaledDown(1e18, 1e18), uint256(952_380_952_380_952_380));
+
         vm.expectRevert();
         assertEq(AccountingMath.solverGasLimitScaledDown(type(uint256).max, type(uint256).max), type(uint256).max);
-        
+
         assertEq(AccountingMath.solverGasLimitScaledDown(1, 2), uint256(0)); // 1 * 10_000_000 / 10_500_000
         assertEq(AccountingMath.solverGasLimitScaledDown(3, 3), uint256(2)); // 3 * 10_000_000 / 10_500_000
         assertEq(AccountingMath.solverGasLimitScaledDown(5, 10), uint256(4)); // 5 * 10_000_000 / 10_500_000
-
     }
 }

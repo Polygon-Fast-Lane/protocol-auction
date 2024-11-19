@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
-import { ExecutionEnvironment } from "src/contracts/common/ExecutionEnvironment.sol";
-import { DAppIntegration } from "src/contracts/atlas/DAppIntegration.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
+import { FactoryLib } from "../src/contracts/atlas/FactoryLib.sol";
+import { Atlas } from "../src/contracts/atlas/Atlas.sol";
+import { ExecutionEnvironment } from "../src/contracts/common/ExecutionEnvironment.sol";
+import { DAppIntegration } from "../src/contracts/atlas/DAppIntegration.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
+import { AtlasVerification } from "../src/contracts/atlas/AtlasVerification.sol";
 
 import { DummyDAppControl, CallConfigBuilder } from "./base/DummyDAppControl.sol";
 
@@ -16,10 +17,14 @@ contract MockDAppIntegration is DAppIntegration {
 }
 
 contract DAppIntegrationTest is Test {
+    uint256 DEFAULT_ATLAS_SURCHARGE_RATE = 1_000_000; // 10%
+    uint256 DEFAULT_BUNDLER_SURCHARGE_RATE = 1_000_000; // 10%
+
     Atlas public atlas;
     MockDAppIntegration public dAppIntegration;
     DummyDAppControl public dAppControl;
     AtlasVerification atlasVerification;
+    FactoryLib factoryLib;
 
     address atlasDeployer = makeAddr("atlas deployer");
     address governance = makeAddr("governance");
@@ -30,19 +35,22 @@ contract DAppIntegrationTest is Test {
         vm.startPrank(atlasDeployer);
         
         // Compute expected addresses for Atlas
-        address expectedAtlasAddr = vm.computeCreateAddress(atlasDeployer, vm.getNonce(atlasDeployer) + 2);
+        address expectedAtlasAddr = vm.computeCreateAddress(atlasDeployer, vm.getNonce(atlasDeployer) + 3);
 
         ExecutionEnvironment execEnvTemplate = new ExecutionEnvironment(expectedAtlasAddr);
 
         // Deploy the AtlasVerification contract
         atlasVerification = new AtlasVerification(expectedAtlasAddr);
+        factoryLib = new FactoryLib(address(execEnvTemplate));
 
         // Deploy the Atlas contract with correct parameters
         atlas = new Atlas({
             escrowDuration: 64,
+            atlasSurchargeRate: DEFAULT_ATLAS_SURCHARGE_RATE,
+            bundlerSurchargeRate: DEFAULT_BUNDLER_SURCHARGE_RATE,
             verification: address(atlasVerification),
             simulator: address(0),
-            executionTemplate: address(execEnvTemplate),
+            factoryLib: address(factoryLib),
             initialSurchargeRecipient: atlasDeployer,
             l2GasCalculator: address(0)
         });

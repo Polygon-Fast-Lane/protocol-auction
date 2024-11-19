@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/ConfigTypes.sol";
 
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
+import { CallBits } from "./CallBits.sol";
 
 library CallVerification {
     using CallBits for uint32;

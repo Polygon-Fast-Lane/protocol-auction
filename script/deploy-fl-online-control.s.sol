@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-import { DeployBaseScript } from "script/base/deploy-base.s.sol";
+import { DeployBaseScript } from "./base/deploy-base.s.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
-import { FastLaneOnlineOuter } from "src/contracts/examples/fastlane-online/FastLaneOnlineOuter.sol";
+import { Atlas } from "../src/contracts/atlas/Atlas.sol";
+import { AtlasVerification } from "../src/contracts/atlas/AtlasVerification.sol";
+import { FastLaneOnlineOuter } from "../src/contracts/examples/fastlane-online/FastLaneOnlineOuter.sol";
 
 contract DeployFLOnlineControlScript is DeployBaseScript {
     FastLaneOnlineOuter flOnline;

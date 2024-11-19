@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-import { Result } from "src/contracts/helpers/Simulator.sol";
-import { DAppConfig, CallConfig } from "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/DAppOperation.sol";
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
-import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
-import { ValidCallsResult } from "src/contracts/types/ValidCalls.sol";
-import { SolverOutcome } from "src/contracts/types/EscrowTypes.sol";
-import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
+import { Result } from "../src/contracts/helpers/Simulator.sol";
+import { DAppConfig, CallConfig } from "../src/contracts/types/ConfigTypes.sol";
+import "../src/contracts/types/DAppOperation.sol";
+import { UserOperation } from "../src/contracts/types/UserOperation.sol";
+import { SolverOperation } from "../src/contracts/types/SolverOperation.sol";
+import { AtlasEvents } from "../src/contracts/types/AtlasEvents.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
+import { ValidCallsResult } from "../src/contracts/types/ValidCalls.sol";
+import { SolverOutcome } from "../src/contracts/types/EscrowTypes.sol";
+import { CallVerification } from "../src/contracts/libraries/CallVerification.sol";
 
 import { BaseTest } from "./base/BaseTest.t.sol";
 import { UserOperationBuilder } from "./base/builders/UserOperationBuilder.sol";
@@ -22,7 +22,7 @@ import { CallConfigBuilder } from "./helpers/CallConfigBuilder.sol";
 import { DummyDAppControlBuilder } from "./helpers/DummyDAppControlBuilder.sol";
 
 import { DummyDAppControl } from "./base/DummyDAppControl.sol";
-import { SolverBase } from "src/contracts/solver/SolverBase.sol";
+import { SolverBase } from "../src/contracts/solver/SolverBase.sol";
 
 
 contract SimulatorTest is BaseTest {

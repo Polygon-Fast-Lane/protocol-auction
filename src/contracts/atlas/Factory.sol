@@ -1,29 +1,19 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
-import { Mimic } from "src/contracts/common/Mimic.sol";
-import { DAppConfig } from "src/contracts/types/ConfigTypes.sol";
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
+import { FactoryLib } from "./FactoryLib.sol";
 
-/// @title Factory
-/// @author FastLane Labs
-/// @notice Provides functionality for creating and managing execution environments for DApps within the Atlas Protocol.
-/// @dev This contract uses deterministic deployment to generate and manage Execution Environment instances based on
-/// predefined templates.
+import { IDAppControl } from "../interfaces/IDAppControl.sol";
+import { DAppConfig } from "../types/ConfigTypes.sol";
+import { UserOperation } from "../types/UserOperation.sol";
+import { AtlasErrors } from "../types/AtlasErrors.sol";
+
 abstract contract Factory {
-    address public immutable EXECUTION_ENV_TEMPLATE;
+    address public immutable FACTORY_LIB;
     bytes32 internal immutable _FACTORY_BASE_SALT;
 
-    /// @notice Initializes a new Factory contract instance by setting the immutable salt for deterministic deployment
-    /// of Execution Environments and storing the execution template address.
-    /// @dev The Execution Environment Template must be separately deployed using the same calculated salt.
-    /// @param executionTemplate Address of the pre-deployed execution template contract for creating Execution
-    /// Environment instances.
-    constructor(address executionTemplate) {
-        EXECUTION_ENV_TEMPLATE = executionTemplate;
+    constructor(address factoryLib) {
+        FACTORY_LIB = factoryLib;
         _FACTORY_BASE_SALT = keccak256(abi.encodePacked(block.chainid, address(this)));
     }
 
@@ -57,7 +47,6 @@ abstract contract Factory {
         address control
     )
         external
-        view
         returns (address executionEnvironment, uint32 callConfig, bool exists)
     {
         callConfig = IDAppControl(control).CALL_CONFIG();
@@ -100,25 +89,13 @@ abstract contract Factory {
         internal
         returns (address executionEnvironment)
     {
-        bytes memory _creationCode = _getMimicCreationCode({ user: user, control: control, callConfig: callConfig });
         bytes32 _salt = _computeSalt(user, control, callConfig);
 
-        executionEnvironment = address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(abi.encodePacked(_creationCode)))
-                    )
-                )
-            )
+        bytes memory returnData = _delegatecallFactoryLib(
+            abi.encodeCall(FactoryLib.getOrCreateExecutionEnvironment, (user, control, callConfig, _salt))
         );
 
-        if (executionEnvironment.code.length == 0) {
-            assembly {
-                executionEnvironment := create2(0, add(_creationCode, 32), mload(_creationCode), _salt)
-            }
-            emit AtlasEvents.ExecutionEnvironmentCreated(user, executionEnvironment);
-        }
+        return abi.decode(returnData, (address));
     }
 
     /// @notice Generates the address of a user's execution environment affected by deprecated callConfig changes in the
@@ -135,79 +112,28 @@ abstract contract Factory {
         uint32 callConfig
     )
         internal
-        view
         returns (address executionEnvironment)
     {
-        bytes memory _creationCode = _getMimicCreationCode({ user: user, control: control, callConfig: callConfig });
         bytes32 _salt = _computeSalt(user, control, callConfig);
 
-        executionEnvironment = address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(bytes1(0xff), address(this), _salt, keccak256(abi.encodePacked(_creationCode)))
-                    )
-                )
-            )
+        bytes memory returnData = _delegatecallFactoryLib(
+            abi.encodeCall(FactoryLib.getExecutionEnvironmentCustom, (user, control, callConfig, _salt))
         );
+
+        return abi.decode(returnData, (address));
     }
 
     function _computeSalt(address user, address control, uint32 callConfig) internal view returns (bytes32) {
         return keccak256(abi.encodePacked(_FACTORY_BASE_SALT, user, control, callConfig));
     }
 
-    /// @notice Generates the creation code for the execution environment contract.
-    /// @param control The address of the DAppControl contract associated with the execution environment.
-    /// @param callConfig The configuration flags defining the behavior of the execution environment.
-    /// @param user The address of the user for whom the execution environment is being created, contributing to the
-    /// uniqueness of the creation code.
-    /// @return creationCode The bytecode representing the creation code of the execution environment contract.
-    function _getMimicCreationCode(
-        address user,
-        address control,
-        uint32 callConfig
-    )
-        internal
-        view
-        returns (bytes memory creationCode)
-    {
-        address _executionLib = EXECUTION_ENV_TEMPLATE;
-        // NOTE: Changing compiler settings or solidity versions can break this.
-        creationCode = type(Mimic).creationCode;
-
-        assembly {
-            // Insert the ExecutionEnvironment "Lib" address, into the AAAA placeholder in the creation code.
-            mstore(
-                add(creationCode, 79),
-                or(
-                    and(mload(add(creationCode, 79)), not(shl(96, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))),
-                    shl(96, _executionLib)
-                )
-            )
-
-            // Insert the user address into the BBBB placeholder in the creation code.
-            mstore(
-                add(creationCode, 111),
-                or(
-                    and(mload(add(creationCode, 111)), not(shl(96, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))),
-                    shl(96, user)
-                )
-            )
-
-            // Insert the control address into the CCCC placeholder in the creation code.
-            mstore(
-                add(creationCode, 132),
-                or(
-                    and(mload(add(creationCode, 132)), not(shl(96, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))),
-                    shl(96, control)
-                )
-            )
-
-            // Insert the callConfig into the 2222 placeholder in the creation code.
-            mstore(
-                add(creationCode, 153),
-                or(and(mload(add(creationCode, 153)), not(shl(224, 0xFFFFFFFF))), shl(224, callConfig))
-            )
+    function _delegatecallFactoryLib(bytes memory data) internal returns (bytes memory) {
+        (bool _success, bytes memory _result) = FACTORY_LIB.delegatecall(data);
+        if (!_success) {
+            assembly {
+                revert(add(_result, 32), mload(_result))
+            }
         }
+        return _result;
     }
 }

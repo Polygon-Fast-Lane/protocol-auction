@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
-import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
+import { IDAppControl } from "../interfaces/IDAppControl.sol";
+import { IAtlas } from "../interfaces/IAtlas.sol";
+import { CallBits } from "../libraries/CallBits.sol";
+import { AtlasErrors } from "../types/AtlasErrors.sol";
+import { AtlasEvents } from "../types/AtlasEvents.sol";
 
 /// @title DAppIntegration
 /// @author FastLane Labs

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
@@ -7,15 +7,15 @@ import "forge-std/StdJson.sol";
 
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
-import { SwapIntentDAppControl } from "src/contracts/examples/intents-example/SwapIntentDAppControl.sol";
-import { TxBuilder } from "src/contracts/helpers/TxBuilder.sol";
-import { Simulator } from "src/contracts/helpers/Simulator.sol";
-import { Sorter } from "src/contracts/helpers/Sorter.sol";
-import { SimpleRFQSolver } from "test/SwapIntent.t.sol";
+import { Atlas } from "../../src/contracts/atlas/Atlas.sol";
+import { AtlasVerification } from "../../src/contracts/atlas/AtlasVerification.sol";
+import { SwapIntentDAppControl } from "../../src/contracts/examples/intents-example/SwapIntentDAppControl.sol";
+import { TxBuilder } from "../../src/contracts/helpers/TxBuilder.sol";
+import { Simulator } from "../../src/contracts/helpers/Simulator.sol";
+import { Sorter } from "../../src/contracts/helpers/Sorter.sol";
+import { SimpleRFQSolver } from "../../test/SwapIntent.t.sol";
 
-import { Utilities } from "src/contracts/helpers/Utilities.sol";
+import { Utilities } from "../../src/contracts/helpers/Utilities.sol";
 
 contract DeployBaseScript is Script {
     using stdJson for string;
@@ -67,6 +67,19 @@ contract DeployBaseScript is Script {
             return "BASE SEPOLIA";
         } else {
             revert("Error: Chain ID not recognized");
+        }
+    }
+
+    function _getSurchargeRates() internal view returns (uint256 atlasSurchargeRate, uint256 bundlerSurchargeRate) {
+        uint256 chainId = block.chainid;
+        if (chainId == 137 || chainId == 80_002) {
+            // POLYGON and AMOY
+            atlasSurchargeRate = 5_000_000; // 50%
+            bundlerSurchargeRate = 5_000_000; // 50%
+        } else {
+            // Default - for all other chains
+            atlasSurchargeRate = 1_000_000; // 10%
+            bundlerSurchargeRate = 1_000_000; // 10%
         }
     }
 

@@ -73,7 +73,7 @@ jobs:
           echo "✅ Passed" >> $GITHUB_STEP_SUMMARY
 
   tests:
-    needs: ["lint", "build"]
+    needs: ["build"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

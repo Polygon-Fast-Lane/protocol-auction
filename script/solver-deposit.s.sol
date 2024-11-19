@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 
-import { DeployBaseScript } from "script/base/deploy-base.s.sol";
+import { DeployBaseScript } from "./base/deploy-base.s.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
+import { Atlas } from "../src/contracts/atlas/Atlas.sol";
 
 // NOTE: When handling JSON with StdJson, prefix keys with '.' e.g. '.ATLAS'
 

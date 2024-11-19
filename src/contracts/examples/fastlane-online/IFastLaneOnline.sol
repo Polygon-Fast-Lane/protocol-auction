@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/SolverOperation.sol";
-import { SwapIntent, BaselineCall, Reputation } from "src/contracts/examples/fastlane-online/FastLaneTypes.sol";
+import "../../types/UserOperation.sol";
+import "../../types/SolverOperation.sol";
+import { SwapIntent, BaselineCall, Reputation } from "./FastLaneTypes.sol";
 
 interface IFastLaneOnline {
     // User entrypoint

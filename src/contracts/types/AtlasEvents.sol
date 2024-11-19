@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 contract AtlasEvents {
     // Metacall
@@ -16,21 +16,28 @@ contract AtlasEvents {
     event Bond(address indexed owner, uint256 amount);
     event Unbond(address indexed owner, uint256 amount, uint256 earliestAvailable);
     event Redeem(address indexed owner, uint256 amount);
-    event Transfer(address indexed from, address indexed to, uint256 amount);
-    event Approval(address indexed owner, address indexed spender, uint256 amount);
+    event Mint(address indexed to, uint256 amount);
+    event Burn(address indexed from, uint256 amount);
 
     // Escrow events
     event SolverTxResult(
-        address indexed solverTo, address indexed solverFrom, bool executed, bool success, uint256 result
+        address indexed solverTo,
+        address indexed solverFrom,
+        address indexed dAppControl,
+        address bidToken,
+        uint256 bidAmount,
+        bool executed,
+        bool success,
+        uint256 result
     );
 
     // Factory events
     event ExecutionEnvironmentCreated(address indexed user, address indexed executionEnvironment);
 
     // Surcharge events
-    event SurchargeWithdrawn(address to, uint256 amount);
-    event SurchargeRecipientTransferStarted(address currentRecipient, address newRecipient);
-    event SurchargeRecipientTransferred(address newRecipient);
+    event SurchargeWithdrawn(address indexed to, uint256 amount);
+    event SurchargeRecipientTransferStarted(address indexed currentRecipient, address indexed newRecipient);
+    event SurchargeRecipientTransferred(address indexed newRecipient);
 
     // DAppControl events
     event GovernanceTransferStarted(address indexed previousGovernance, address indexed newGovernance);

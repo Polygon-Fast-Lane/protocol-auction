@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 bytes32 constant SOLVER_TYPEHASH = keccak256(
     "SolverOperation(address from,address to,uint256 value,uint256 gas,uint256 maxFeePerGas,uint256 deadline,address solver,address control,bytes32 userOpHash,address bidToken,uint256 bidAmount,bytes data)"
 );
 
 // NOTE: The calldata length of this SolverOperation struct is 608 bytes when the `data` field is excluded. This value
-// is stored in the `_SOLVER_OP_BASE_CALLDATA` constant in Storage.sol and must be kept up-to-date with any changes to
-// this struct.
+// is stored in the `_SOLVER_OP_BASE_CALLDATA` constant in AtlasConstants.sol and must be kept up-to-date with any
+// changes to this struct.
 struct SolverOperation {
     address from; // Solver address
     address to; // Atlas address

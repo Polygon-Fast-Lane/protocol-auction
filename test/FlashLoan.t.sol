@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import { TxBuilder } from "src/contracts/helpers/TxBuilder.sol";
+import { TxBuilder } from "../src/contracts/helpers/TxBuilder.sol";
 import { BaseTest } from "./base/BaseTest.t.sol";
 import { ArbitrageTest } from "./base/ArbitrageTest.t.sol";
-import { SolverBase } from "src/contracts/solver/SolverBase.sol";
-import { DAppControl } from "src/contracts/dapp/DAppControl.sol";
-import { CallConfig } from "src/contracts/types/ConfigTypes.sol";
-import { SolverOutcome } from "src/contracts/types/EscrowTypes.sol";
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/DAppOperation.sol";
-import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
+import { SolverBase } from "../src/contracts/solver/SolverBase.sol";
+import { DAppControl } from "../src/contracts/dapp/DAppControl.sol";
+import { CallConfig } from "../src/contracts/types/ConfigTypes.sol";
+import { SolverOutcome } from "../src/contracts/types/EscrowTypes.sol";
+import { UserOperation } from "../src/contracts/types/UserOperation.sol";
+import { SolverOperation } from "../src/contracts/types/SolverOperation.sol";
+import "../src/contracts/types/DAppOperation.sol";
+import { AtlasEvents } from "../src/contracts/types/AtlasEvents.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
+import { IAtlas } from "../src/contracts/interfaces/IAtlas.sol";
 import { UserOperationBuilder } from "./base/builders/UserOperationBuilder.sol";
 import { SolverOperationBuilder } from "./base/builders/SolverOperationBuilder.sol";
 import { DAppOperationBuilder } from "./base/builders/DAppOperationBuilder.sol";
@@ -26,10 +26,18 @@ interface IWETH {
     function withdraw(uint256 wad) external;
 }
 
+struct Balances{
+    uint256 eth;
+    uint256 atlETH;
+    uint256 bonded;
+}
+
 contract FlashLoanTest is BaseTest {
     DummyDAppControlBuilder public control;
 
     Sig public sig;
+    Balances public userBefore;
+    Balances public userAfter;
 
     function setUp() public virtual override {
         BaseTest.setUp();
@@ -110,9 +118,18 @@ contract FlashLoanTest is BaseTest {
         vm.startPrank(userEOA);
         vm.expectEmit(true, true, true, true);
         uint256 result = (1 << uint256(SolverOutcome.BidNotPaid));
-        emit AtlasEvents.SolverTxResult(address(solver), solverOneEOA, true, false, result);
+        emit AtlasEvents.SolverTxResult(
+            address(solver),
+            solverOneEOA,
+            userOp.control,
+            solverOps[0].bidToken,
+            solverOps[0].bidAmount,
+            true,
+            false,
+            result
+        );
         vm.expectRevert();
-        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp });
+        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp, gasRefundBeneficiary: address(0) });
         vm.stopPrank();
 
         // now try it again with a valid solverOp - but dont fully pay back
@@ -153,9 +170,18 @@ contract FlashLoanTest is BaseTest {
         vm.expectEmit(true, true, true, true);
         result = (1 << uint256(SolverOutcome.CallValueTooHigh));
         console.log("result", result);
-        emit AtlasEvents.SolverTxResult(address(solver), solverOneEOA, false, false, result);
+        emit AtlasEvents.SolverTxResult(
+            address(solver),
+            solverOneEOA,
+            userOp.control,
+            solverOps[0].bidToken,
+            solverOps[0].bidAmount,
+            false,
+            false,
+            result
+        );
         vm.expectRevert();
-        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp });
+        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp, gasRefundBeneficiary: address(0) });
         vm.stopPrank();
 
         // final try, should be successful with full payback
@@ -192,15 +218,12 @@ contract FlashLoanTest is BaseTest {
         (sig.v, sig.r, sig.s) = vm.sign(governancePK, atlasVerification.getDAppOperationPayload(dAppOp));
         dAppOp.signature = abi.encodePacked(sig.r, sig.s, sig.v);
 
-        address _solver = address(solver);
-
-        uint256 solverStartingTotal = WETH.balanceOf(_solver);
-
+        uint256 solverStartingTotal = WETH.balanceOf(address(solver));
         uint256 atlasStartingETH = address(atlas).balance;
 
-        uint256 userStartingETH = address(userEOA).balance;
-        uint256 userStartingAtlETH = atlas.balanceOf(userEOA);
-        uint256 userStartingBonded = atlas.balanceOfBonded(userEOA);
+        userBefore.eth = address(userEOA).balance;
+        userBefore.atlETH = atlas.balanceOf(userEOA);
+        userBefore.bonded = atlas.balanceOfBonded(userEOA);
 
         assertEq(solverStartingTotal, 1e18, "solver incorrect starting WETH");
         solverStartingTotal += (atlas.balanceOf(solverOneEOA) + atlas.balanceOfBonded(solverOneEOA));
@@ -213,8 +236,17 @@ contract FlashLoanTest is BaseTest {
         vm.startPrank(userEOA);
         result = 0;
         vm.expectEmit(true, true, true, true);
-        emit AtlasEvents.SolverTxResult(_solver, solverOneEOA, true, true, result);
-        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp });
+        emit AtlasEvents.SolverTxResult(
+            address(solver),
+            solverOneEOA,
+            userOp.control,
+            solverOps[0].bidToken,
+            solverOps[0].bidAmount,
+            true,
+            true,
+            result
+        );
+        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp, gasRefundBeneficiary: address(0) });
         vm.stopPrank();
 
         // atlas 2e beginning bal + 1e from solver +100e eth from user = 103e atlas total
@@ -222,18 +254,18 @@ contract FlashLoanTest is BaseTest {
 
         {
             console.log("solverStartingTotal:  ", solverStartingTotal);
-            console.log("solverEndingTotal  :  ", WETH.balanceOf(_solver) + atlas.balanceOf(solverOneEOA) + atlas.balanceOfBonded(solverOneEOA));
-            solverStartingTotal -= (WETH.balanceOf(_solver) + atlas.balanceOf(solverOneEOA) + atlas.balanceOfBonded(solverOneEOA));
+            console.log("solverEndingTotal  :  ", WETH.balanceOf(address(solver)) + atlas.balanceOf(solverOneEOA) + atlas.balanceOfBonded(solverOneEOA));
+            solverStartingTotal -= (WETH.balanceOf(address(solver)) + atlas.balanceOf(solverOneEOA) + atlas.balanceOfBonded(solverOneEOA));
             console.log("solverDeltaTotal   :  ", solverStartingTotal);
         }
 
-        uint256 userEndingETH = address(userEOA).balance;
-        uint256 userEndingAtlETH = atlas.balanceOf(userEOA);
-        uint256 userEndingBonded = atlas.balanceOfBonded(userEOA);
+        userAfter.eth = address(userEOA).balance;
+        userAfter.atlETH = atlas.balanceOf(userEOA);
+        userAfter.bonded = atlas.balanceOfBonded(userEOA);
 
         {
-            console.log("userStartingTotal  :", userStartingETH + userStartingAtlETH + userStartingBonded);
-            console.log("userEndingTotal    :", userEndingETH + userEndingAtlETH + userEndingBonded);
+            console.log("userStartingTotal  :", userBefore.eth + userBefore.atlETH + userBefore.bonded);
+            console.log("userEndingTotal    :", userAfter.eth + userAfter.atlETH + userAfter.bonded);
 
             console.log("atlasStartingETH   :", atlasStartingETH);
             console.log("atlasEndingETH     :", address(atlas).balance);
@@ -242,7 +274,7 @@ contract FlashLoanTest is BaseTest {
         netSurcharge = atlas.cumulativeSurcharge() - netSurcharge;
         console.log("NetCumulativeSrchrg:       ", netSurcharge);
 
-        assertEq(WETH.balanceOf(_solver), 0, "solver WETH not used");
+        assertEq(WETH.balanceOf(address(solver)), 0, "solver WETH not used");
         assertEq(atlas.balanceOf(solverOneEOA), 0, "solver atlETH not used");
         console.log("atlasStartingETH   :", atlasStartingETH);
         console.log("atlasEnding  ETH   :", address(atlas).balance);
@@ -250,10 +282,10 @@ contract FlashLoanTest is BaseTest {
         // NOTE: solverStartingTotal is the solverTotal delta, not starting.
         assertTrue(address(atlas).balance >= atlasStartingETH - solverStartingTotal, "atlas incorrect ending ETH"); // atlas should NEVER lose balance during a metacall
 
-        console.log("userStartingETH    :", userStartingETH);
-        console.log("userEndingETH      :", userEndingETH);
-        assertTrue((userEndingETH - userStartingETH) >= 1 ether, "user incorrect ending ETH"); // user bal should increase by 1e (bid) + gas refund
-        assertTrue((userEndingBonded - userStartingBonded) == 0, "user incorrect ending bonded AtlETH"); // user bonded bal should increase by gas refund
+        console.log("userStartingETH    :", userBefore.eth);
+        console.log("userEndingETH      :", userAfter.eth);
+        assertTrue((userAfter.eth - userBefore.eth) >= 1 ether, "user incorrect ending ETH"); // user bal should increase by 1e (bid) + gas refund
+        assertTrue((userAfter.bonded - userBefore.bonded) == 0, "user incorrect ending bonded AtlETH"); // user bonded bal should increase by gas refund
     }
 }
 

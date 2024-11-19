@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 import { BaseTest } from "./base/BaseTest.t.sol";
 import { MockSafetyLocks } from "./SafetyLocks.t.sol";
 
-import { ExecutionEnvironment } from "src/contracts/common/ExecutionEnvironment.sol";
-import { DAppControl } from "src/contracts/dapp/DAppControl.sol";
+import { ExecutionEnvironment } from "../src/contracts/common/ExecutionEnvironment.sol";
+import { DAppControl } from "../src/contracts/dapp/DAppControl.sol";
 
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
+import { IAtlas } from "../src/contracts/interfaces/IAtlas.sol";
 
-import { SafetyBits } from "src/contracts/libraries/SafetyBits.sol";
+import { SafetyBits } from "../src/contracts/libraries/SafetyBits.sol";
 
-import { SolverBase } from "src/contracts/solver/SolverBase.sol";
+import { SolverBase } from "../src/contracts/solver/SolverBase.sol";
 
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
 
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/LockTypes.sol";
-import "src/contracts/types/EscrowTypes.sol";
+import "../src/contracts/types/ConfigTypes.sol";
+import "../src/contracts/types/UserOperation.sol";
+import "../src/contracts/types/SolverOperation.sol";
+import "../src/contracts/types/LockTypes.sol";
+import "../src/contracts/types/EscrowTypes.sol";
 
-import "src/contracts/libraries/CallBits.sol";
+import "../src/contracts/libraries/CallBits.sol";
 
 /// @notice ExecutionEnvironmentTest tests deploy ExecutionEnvironment contracts through the factory. Because all calls
 /// are delegated through the mimic contract, the reported coverage is at 0%, but the actual coverage is close to 100%.

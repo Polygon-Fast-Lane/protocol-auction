@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/DAppOperation.sol";
+import { UserOperation } from "../../../src/contracts/types/UserOperation.sol";
+import { SolverOperation } from "../../../src/contracts/types/SolverOperation.sol";
+import "../../../src/contracts/types/DAppOperation.sol";
 
-import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
+import { CallVerification } from "../../../src/contracts/libraries/CallVerification.sol";
 
-import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
-import { IAtlasVerification } from "src/contracts/interfaces/IAtlasVerification.sol";
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
+import { IDAppControl } from "../../../src/contracts/interfaces/IDAppControl.sol";
+import { IAtlasVerification } from "../../../src/contracts/interfaces/IAtlasVerification.sol";
+import { IAtlas } from "../../../src/contracts/interfaces/IAtlas.sol";
 
-import "src/contracts/types/ConfigTypes.sol";
+import "../../../src/contracts/types/ConfigTypes.sol";
 
 contract DAppOperationBuilder is Test {
     using CallVerification for UserOperation;

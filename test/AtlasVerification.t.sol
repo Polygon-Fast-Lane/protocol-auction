@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-import { AtlasVerification, USER_TYPEHASH_DEFAULT, USER_TYPEHASH_TRUSTED } from "src/contracts/atlas/AtlasVerification.sol";
-import { DAppConfig, CallConfig } from "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/DAppOperation.sol";
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
-import { ValidCallsResult } from "src/contracts/types/ValidCalls.sol";
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
+import { AtlasVerification, USER_TYPEHASH_DEFAULT, USER_TYPEHASH_TRUSTED } from "../src/contracts/atlas/AtlasVerification.sol";
+import { DAppConfig, CallConfig } from "../src/contracts/types/ConfigTypes.sol";
+import "../src/contracts/types/DAppOperation.sol";
+import { UserOperation } from "../src/contracts/types/UserOperation.sol";
+import { SolverOperation } from "../src/contracts/types/SolverOperation.sol";
+import { ValidCallsResult } from "../src/contracts/types/ValidCalls.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
 import { DummyDAppControl } from "./base/DummyDAppControl.sol";
 import { BaseTest } from "./base/BaseTest.t.sol";
-import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
-import { SolverOutcome } from "src/contracts/types/EscrowTypes.sol";
+import { CallVerification } from "../src/contracts/libraries/CallVerification.sol";
+import { CallBits } from "../src/contracts/libraries/CallBits.sol";
+import { SolverOutcome } from "../src/contracts/types/EscrowTypes.sol";
 import { DummyDAppControlBuilder } from "./helpers/DummyDAppControlBuilder.sol";
 import { CallConfigBuilder } from "./helpers/CallConfigBuilder.sol";
 import { UserOperationBuilder } from "./base/builders/UserOperationBuilder.sol";

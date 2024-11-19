@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { AtlasConstants } from "src/contracts/types/AtlasConstants.sol";
+import { AtlasConstants } from "../types/AtlasConstants.sol";
 
 contract NonceManager is AtlasConstants {
     // address => last used sequential nonce

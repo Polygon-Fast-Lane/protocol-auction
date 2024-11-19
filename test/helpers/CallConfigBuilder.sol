@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { CallConfig } from "src/contracts/types/ConfigTypes.sol";
+import { CallConfig } from "../../src/contracts/types/ConfigTypes.sol";
 
 import "forge-std/Test.sol";
 

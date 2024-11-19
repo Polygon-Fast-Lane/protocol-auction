@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
-import { IAtlasVerification } from "src/contracts/interfaces/IAtlasVerification.sol";
+import { IDAppControl } from "../interfaces/IDAppControl.sol";
+import { IAtlas } from "../interfaces/IAtlas.sol";
+import { IAtlasVerification } from "../interfaces/IAtlasVerification.sol";
 
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/DAppOperation.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/ConfigTypes.sol";
+import "../types/DAppOperation.sol";
 
-import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
+import { CallVerification } from "../libraries/CallVerification.sol";
+import { CallBits } from "../libraries/CallBits.sol";
 
 import "forge-std/Test.sol";
 

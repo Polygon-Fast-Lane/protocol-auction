@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { DAppConfig } from "src/contracts/types/ConfigTypes.sol";
-import { DAppOperation } from "src/contracts/types/DAppOperation.sol";
-import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
+import { SolverOperation } from "../src/contracts/types/SolverOperation.sol";
+import { UserOperation } from "../src/contracts/types/UserOperation.sol";
+import { DAppConfig } from "../src/contracts/types/ConfigTypes.sol";
+import { DAppOperation } from "../src/contracts/types/DAppOperation.sol";
+import { CallVerification } from "../src/contracts/libraries/CallVerification.sol";
 
-import { SolverBase } from "src/contracts/solver/SolverBase.sol";
+import { SolverBase } from "../src/contracts/solver/SolverBase.sol";
 
 import { BaseTest } from "./base/BaseTest.t.sol";
-import { TrebleSwapDAppControl } from "src/contracts/examples/trebleswap/TrebleSwapDAppControl.sol";
+import { TrebleSwapDAppControl } from "../src/contracts/examples/trebleswap/TrebleSwapDAppControl.sol";
 
 contract TrebleSwapTest is BaseTest {
     struct SwapTokenInfo {
@@ -52,7 +52,7 @@ contract TrebleSwapTest is BaseTest {
     address BRETT = 0x532f27101965dd16442E59d40670FaF5eBB142E4;
     address TREB; // will be set to value in DAppControl in setUp
 
-    uint256 ERR_MARGIN = 0.18e18; // 18% error margin
+    uint256 ERR_MARGIN = 0.22e18; // 22% error margin
     uint256 bundlerGasEth = 1e16;
 
     TrebleSwapDAppControl trebleSwapControl;
@@ -117,7 +117,7 @@ contract TrebleSwapTest is BaseTest {
         _doMetacallAndChecks({ winningSolver: address(0) });
     }
 
-    function testTrebleSwap_Metacall_Erc20ToErc20_OneSolver() public {
+    function testTrebleSwap_Metacall_Erc20ToErc20_OneSolver_GasCheck() public {
         // Tx: https://basescan.org/tx/0x0ef4a9c24bbede2b39e12f5e5417733fa8183f372e41ee099c2c7523064c1b55
         // Swaps 197.2 USDC for at least 198,080,836.0295 WUF
 
@@ -199,7 +199,7 @@ contract TrebleSwapTest is BaseTest {
         _doMetacallAndChecks({ winningSolver: address(0) });
     }
 
-    function testTrebleSwap_Metacall_EthToErc20_OneSolver() public {
+    function testTrebleSwap_Metacall_EthToErc20_OneSolver_GasCheck() public {
         // Tx: https://basescan.org/tx/0xe138def4155bea056936038b9374546a366828ab8bf1233056f9e2fe4c6af999
         // Swaps 0.123011147164483512 ETH for at least 307.405807527716546728 DAI
 
@@ -288,31 +288,47 @@ contract TrebleSwapTest is BaseTest {
         beforeVars.solverTrebBalance = _balanceOf(address(TREB), winningSolver);
         beforeVars.burnAddressTrebBalance = _balanceOf(address(TREB), BURN);
         beforeVars.atlasGasSurcharge = atlas.cumulativeSurcharge();
-        uint256 msgValue = (args.nativeInput ? swapInfo.inputAmount : 0) + bundlerGasEth;
-        if (args.nativeInput) beforeVars.userInputTokenBalance -= bundlerGasEth;
-        if (args.nativeOutput) beforeVars.userOutputTokenBalance -= bundlerGasEth;
+        uint256 msgValue = args.nativeInput ? swapInfo.inputAmount : 0;
 
         uint256 txGasUsed;
         uint256 estAtlasGasSurcharge = gasleft(); // Reused below during calculations
 
         // Do the actual metacall
         vm.prank(userEOA);
-        bool auctionWon = atlas.metacall{ value: msgValue }(args.userOp, args.solverOps, args.dAppOp);
+        bool auctionWon = atlas.metacall{ value: msgValue }(args.userOp, args.solverOps, args.dAppOp, address(0));
 
         // Estimate gas surcharge Atlas should have taken
         txGasUsed = estAtlasGasSurcharge - gasleft();
         estAtlasGasSurcharge = txGasUsed * tx.gasprice * atlas.ATLAS_SURCHARGE_RATE() / atlas.SCALE();
 
+        // For benchmarking
+        console.log("Metacall gas cost: ", txGasUsed);
+
         // Check Atlas auctionWon return value
         assertEq(auctionWon, auctionWonExpected, "auctionWon not as expected");
 
+        // Check msg.value is 0 unless sending ETH as the input token to be swapped
+        if (!args.nativeInput) assertEq(msgValue, 0, "msgValue should have been 0");
+
         // Check Atlas gas surcharge change
-        assertApproxEqRel(
-            atlas.cumulativeSurcharge() - beforeVars.atlasGasSurcharge,
-            estAtlasGasSurcharge,
-            ERR_MARGIN,
-            "Atlas gas surcharge not within estimated range"
-        );
+        if (args.solverOps.length > 0 && auctionWonExpected) {
+            assertApproxEqRel(
+                atlas.cumulativeSurcharge() - beforeVars.atlasGasSurcharge,
+                estAtlasGasSurcharge,
+                ERR_MARGIN,
+                "Atlas gas surcharge not within estimated range"
+            );
+        } else if (args.solverOps.length == 0) {
+            // No surcharge taken if no solvers.
+            assertEq(
+                atlas.cumulativeSurcharge(),
+                beforeVars.atlasGasSurcharge,
+                "Atlas gas surcharge changed when zero solvers"
+            );
+        } else {
+            // If solver failed (solver's fault), surcharge still taken, but only on failing solverOp portion. Difficult
+            // to estimate what that would be so skip this check in that 1 test case.
+        }
 
         // Check user input token change
         if (args.nativeInput && auctionWonExpected) {

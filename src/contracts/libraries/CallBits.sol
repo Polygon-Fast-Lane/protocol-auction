@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
+import { IDAppControl } from "../interfaces/IDAppControl.sol";
 
-import "src/contracts/types/ConfigTypes.sol";
+import "../types/ConfigTypes.sol";
 
 library CallBits {
     uint32 internal constant _ONE = uint32(1);

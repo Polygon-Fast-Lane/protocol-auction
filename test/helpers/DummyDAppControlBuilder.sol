@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import { DummyDAppControl } from "test/base/DummyDAppControl.sol";
-import { CallConfig } from "src/contracts/types/ConfigTypes.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
+import { DummyDAppControl } from "../base/DummyDAppControl.sol";
+import { CallConfig } from "../../src/contracts/types/ConfigTypes.sol";
+import { AtlasVerification } from "../../src/contracts/atlas/AtlasVerification.sol";
 
 import "forge-std/Test.sol";
 

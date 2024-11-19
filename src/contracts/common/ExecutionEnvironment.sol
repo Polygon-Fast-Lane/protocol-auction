@@ -1,19 +1,19 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import { Base } from "src/contracts/common/ExecutionBase.sol";
 
-import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
-import { ISolverContract } from "src/contracts/interfaces/ISolverContract.sol";
-import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
+import { Base } from "./ExecutionBase.sol";
 
-import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
-import { CallBits } from "src/contracts/libraries/CallBits.sol";
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/EscrowTypes.sol";
+import { IAtlas } from "../interfaces/IAtlas.sol";
+import { ISolverContract } from "../interfaces/ISolverContract.sol";
+import { IDAppControl } from "../interfaces/IDAppControl.sol";
+import { AtlasErrors } from "../types/AtlasErrors.sol";
+import { CallBits } from "../libraries/CallBits.sol";
+import "../types/SolverOperation.sol";
+import "../types/UserOperation.sol";
+import "../types/EscrowTypes.sol";
 
 /// @title ExecutionEnvironment
 /// @author FastLane Labs

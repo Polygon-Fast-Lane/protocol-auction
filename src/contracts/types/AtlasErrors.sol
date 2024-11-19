@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/ValidCalls.sol";
+import "./ValidCalls.sol";
 
 contract AtlasErrors {
     // Simulator
@@ -67,17 +67,8 @@ contract AtlasErrors {
     error InvalidEscrowDuration();
 
     // AtlETH
-    error InsufficientUnbondedBalance(uint256 balance, uint256 requested);
-    error InsufficientBondedBalance(uint256 balance, uint256 requested);
-    error PermitDeadlineExpired();
-    error InvalidSigner();
     error EscrowLockActive();
-    error InsufficientWithdrawableBalance(uint256 balance, uint256 requested);
-    error InsufficientAvailableBalance(uint256 balance, uint256 requested);
-    error InsufficientSurchargeBalance(uint256 balance, uint256 requested);
     error InsufficientBalanceForDeduction(uint256 balance, uint256 requested);
-    error ValueTooLarge();
-    error BidTooHigh(uint256 indexInSolverOps, uint256 bidAmount);
 
     // DAppIntegration
     error OnlyGovernance();

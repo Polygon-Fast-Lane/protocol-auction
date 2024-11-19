@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
-import "src/contracts/types/SolverOperation.sol";
+import "../types/SolverOperation.sol";
 
 interface ISolverContract {
     function atlasSolverCall(

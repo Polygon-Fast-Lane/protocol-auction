@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 import { BaseTest } from "./base/BaseTest.t.sol";
-import { TxBuilder } from "src/contracts/helpers/TxBuilder.sol";
+import { TxBuilder } from "../src/contracts/helpers/TxBuilder.sol";
 
-import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
-import { UserOperation } from "src/contracts/types/UserOperation.sol";
-import { DAppConfig } from "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/DAppOperation.sol";
+import { SolverOperation } from "../src/contracts/types/SolverOperation.sol";
+import { UserOperation } from "../src/contracts/types/UserOperation.sol";
+import { DAppConfig } from "../src/contracts/types/ConfigTypes.sol";
+import "../src/contracts/types/DAppOperation.sol";
 
 import {
     SwapIntentDAppControl,
     SwapIntent,
     Condition
-} from "src/contracts/examples/intents-example/SwapIntentDAppControl.sol";
-import { SolverBase } from "src/contracts/solver/SolverBase.sol";
+} from "../src/contracts/examples/intents-example/SwapIntentDAppControl.sol";
+import { SolverBase } from "../src/contracts/solver/SolverBase.sol";
 
 interface IUniV2Router02 {
     function swapExactTokensForTokens(
@@ -60,14 +60,10 @@ contract SwapIntentTest is BaseTest {
         UserCondition userCondition = new UserCondition();
 
         Condition[] memory conditions = new Condition[](2);
-        conditions[0] = Condition({
-            antecedent: address(userCondition),
-            context: abi.encodeCall(UserCondition.isLessThanFive, 3)
-        });
-        conditions[1] = Condition({
-            antecedent: address(userCondition),
-            context: abi.encodeCall(UserCondition.isLessThanFive, 4)
-        });
+        conditions[0] =
+            Condition({ antecedent: address(userCondition), context: abi.encodeCall(UserCondition.isLessThanFive, 3) });
+        conditions[1] =
+            Condition({ antecedent: address(userCondition), context: abi.encodeCall(UserCondition.isLessThanFive, 4) });
 
         SwapIntent memory swapIntent = SwapIntent({
             tokenUserBuys: DAI_ADDRESS,
@@ -124,8 +120,7 @@ contract SwapIntentTest is BaseTest {
         // userOp.signature = abi.encodePacked(sig.r, sig.s, sig.v);
 
         // Build solver calldata (function selector on solver contract and its params)
-        bytes memory solverOpData =
-            abi.encodeCall(SimpleRFQSolver.fulfillRFQ, (swapIntent, executionEnvironment));
+        bytes memory solverOpData = abi.encodeCall(SimpleRFQSolver.fulfillRFQ, (swapIntent, executionEnvironment));
 
         // Builds the SolverOperation
         solverOps[0] = txBuilder.buildSolverOperation({
@@ -176,7 +171,7 @@ contract SwapIntentTest is BaseTest {
 
         uint256 gasLeftBefore = gasleft();
 
-        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp });
+        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp, gasRefundBeneficiary: address(0) });
 
         console.log("Metacall Gas Cost:", gasLeftBefore - gasleft());
         vm.stopPrank();
@@ -304,7 +299,7 @@ contract SwapIntentTest is BaseTest {
         assertEq(DAI.balanceOf(address(uniswapSolver)), 0, "Solver has DAI before metacall");
 
         // NOTE: Should metacall return something? Feels like a lot of data you might want to know about the tx
-        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp });
+        atlas.metacall({ userOp: userOp, solverOps: solverOps, dAppOp: dAppOp, gasRefundBeneficiary: address(0) });
         vm.stopPrank();
 
         console.log("\nAFTER METACALL");

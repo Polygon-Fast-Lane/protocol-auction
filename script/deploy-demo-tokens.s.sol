@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
 import { DeployBaseScript } from "script/base/deploy-base.s.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
-import { V2RewardDAppControl } from "src/contracts/examples/v2-example-router/V2RewardDAppControl.sol";
-import { IUniswapV2Router02 } from "src/contracts/examples/v2-example-router/interfaces/IUniswapV2Router.sol";
+import { Atlas } from "../src/contracts/atlas/Atlas.sol";
+import { AtlasVerification } from "../src/contracts/atlas/AtlasVerification.sol";
+import { V2RewardDAppControl } from "../src/contracts/examples/v2-example-router/V2RewardDAppControl.sol";
+import { IUniswapV2Router02 } from "../src/contracts/examples/v2-example-router/interfaces/IUniswapV2Router.sol";
 
-import { Token } from "src/contracts/helpers/DemoToken.sol";
+import { Token } from "../src/contracts/helpers/DemoToken.sol";
 import { WETH } from "solady/tokens/WETH.sol";
 
 // Deploy 3 stablecoin tokens (DAI, USDA, USDB) - all 18 decimals

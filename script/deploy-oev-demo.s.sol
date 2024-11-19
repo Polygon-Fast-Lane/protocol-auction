@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-import { DeployBaseScript } from "script/base/deploy-base.s.sol";
+import { DeployBaseScript } from "./base/deploy-base.s.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
-import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
-import { ChainlinkDAppControl } from "src/contracts/examples/oev-example/ChainlinkDAppControl.sol";
-import { ChainlinkAtlasWrapper } from "src/contracts/examples/oev-example/ChainlinkAtlasWrapper.sol";
+import { Atlas } from "../src/contracts/atlas/Atlas.sol";
+import { AtlasVerification } from "../src/contracts/atlas/AtlasVerification.sol";
+import { ChainlinkDAppControl } from "../src/contracts/examples/oev-example/ChainlinkDAppControl.sol";
+import { ChainlinkAtlasWrapper } from "../src/contracts/examples/oev-example/ChainlinkAtlasWrapper.sol";
 
-import { Token } from "src/contracts/helpers/DemoToken.sol";
-import { DemoLendingProtocol } from "src/contracts/helpers/DemoLendingProtocol.sol";
+import { Token } from "../src/contracts/helpers/DemoToken.sol";
+import { DemoLendingProtocol } from "../src/contracts/helpers/DemoLendingProtocol.sol";
 
 contract DeployOEVDemoScript is DeployBaseScript {
     address public constant CHAINLINK_ETH_USD = 0x694AA1769357215DE4FAC081bf1f309aDC325306; // on Sepolia

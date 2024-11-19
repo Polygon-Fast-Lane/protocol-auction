@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { WETH } from "solady/tokens/WETH.sol";
 import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";

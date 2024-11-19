@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.25;
+pragma solidity 0.8.28;
 
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import { IExecutionEnvironment } from "src/contracts/interfaces/IExecutionEnvironment.sol";
+import { IExecutionEnvironment } from "../src/contracts/interfaces/IExecutionEnvironment.sol";
 
-import { Atlas } from "src/contracts/atlas/Atlas.sol";
-import { Mimic } from "src/contracts/common/Mimic.sol";
+import { Atlas } from "../src/contracts/atlas/Atlas.sol";
+import { Mimic } from "../src/contracts/common/Mimic.sol";
 
-import { V2DAppControl } from "src/contracts/examples/v2-example/V2DAppControl.sol";
+import { V2DAppControl } from "../src/contracts/examples/v2-example/V2DAppControl.sol";
 
-import { Solver } from "src/contracts/solver/src/TestSolver.sol";
+import { Solver } from "../src/contracts/solver/src/TestSolver.sol";
 
-import "src/contracts/types/UserOperation.sol";
-import "src/contracts/types/SolverOperation.sol";
-import "src/contracts/types/EscrowTypes.sol";
-import "src/contracts/types/LockTypes.sol";
-import "src/contracts/types/ConfigTypes.sol";
-import "src/contracts/types/DAppOperation.sol";
+import "../src/contracts/types/UserOperation.sol";
+import "../src/contracts/types/SolverOperation.sol";
+import "../src/contracts/types/EscrowTypes.sol";
+import "../src/contracts/types/LockTypes.sol";
+import "../src/contracts/types/ConfigTypes.sol";
+import "../src/contracts/types/DAppOperation.sol";
 
 import { BaseTest } from "./base/BaseTest.t.sol";
 import { V2Helper } from "./V2Helper.sol";
-import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
+import { AtlasEvents } from "../src/contracts/types/AtlasEvents.sol";
 
 import "forge-std/Test.sol";
 
@@ -404,7 +404,7 @@ contract MainTest is BaseTest {
 
         vm.startPrank(userEOA);
         IERC20(TOKEN_ONE).approve(address(atlas), type(uint256).max);
-        atlas.metacall(userOp, solverOps, dAppOp);
+        atlas.metacall(userOp, solverOps, dAppOp, address(0));
         vm.stopPrank();
 
         // Execution environment should exist now
@@ -412,7 +412,7 @@ contract MainTest is BaseTest {
         assertTrue(exists, "ExecutionEnvironment wasn't created");
     }
 
-    function testTestUserOperation_SkipCoverage() public {
+    function testUserOperation_SkipCoverage() public {
         uint8 v;
         bytes32 r;
         bytes32 s;
@@ -493,5 +493,94 @@ contract MainTest is BaseTest {
         assertTrue(success, "Failure case tx reverted unexpectedly");
         assertFalse(abi.decode(data, (bool)), "Failure case did not return false");
         vm.stopPrank();
+    }
+
+    function testGasRefundBeneficiarySolverSucceeds() public {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+
+        address beneficiary = makeAddr("beneficiary");
+
+        vm.prank(solverOneEOA);
+        atlas.bond(1 ether);
+
+        UserOperation memory userOp = helper.buildUserOperation(POOL_ONE, POOL_TWO, userEOA, TOKEN_ONE);
+        // User does not sign their own operation when bundling
+
+        SolverOperation[] memory solverOps = new SolverOperation[](1);
+        bytes memory solverOpData = helper.buildV2SolverOperationData(POOL_TWO, POOL_ONE);
+        solverOps[0] = helper.buildSolverOperation(userOp, solverOpData, solverOneEOA, address(solverOne), 2e17, 0);
+        (v, r, s) = vm.sign(solverOnePK, atlasVerification.getSolverPayload(solverOps[0]));
+        solverOps[0].signature = abi.encodePacked(r, s, v);
+
+        DAppOperation memory dAppOp = helper.buildDAppOperation(governanceEOA, userOp, solverOps);
+        (v, r, s) = vm.sign(governancePK, atlasVerification.getDAppOperationPayload(dAppOp));
+        dAppOp.signature = abi.encodePacked(r, s, v);
+
+        uint256 bondedBalanceBefore = atlas.balanceOfBonded(beneficiary);
+
+        console.log("Beneficiary's balance before metacall", beneficiary.balance);
+        console.log("Beneficiary's AtlETH bonded balance before metacall", bondedBalanceBefore);
+
+        assertEq(beneficiary.balance, 0, "Beneficiary should start with 0 balance");
+        assertEq(bondedBalanceBefore, 0, "Beneficiary's AtlETH bonded balance should start with 0");
+
+        vm.startPrank(userEOA);
+        IERC20(TOKEN_ONE).approve(address(atlas), type(uint256).max);
+        atlas.metacall(userOp, solverOps, dAppOp, beneficiary);
+        vm.stopPrank();
+
+        uint256 bondedBalanceAfter = atlas.balanceOfBonded(beneficiary);
+
+        console.log("Beneficiary's balance after metacall", beneficiary.balance);
+        console.log("Beneficiary's AtlETH bonded balance after metacall", bondedBalanceAfter);
+
+        assertGt(beneficiary.balance, 0, "Beneficiary should have received some ETH");
+        assertEq(bondedBalanceAfter, 0, "Beneficiary's AtlETH bonded balance should still be 0");
+    }
+
+    function testGasRefundBeneficiarySolverFails() public {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+
+        address beneficiary = makeAddr("beneficiary");
+
+        vm.prank(solverOneEOA);
+        atlas.bond(1 ether);
+
+        UserOperation memory userOp = helper.buildUserOperation(POOL_ONE, POOL_TWO, userEOA, TOKEN_ONE);
+        // User does not sign their own operation when bundling
+
+        SolverOperation[] memory solverOps = new SolverOperation[](1);
+        bytes memory solverOpData = helper.buildV2SolverOperationData(POOL_ONE, POOL_ONE); // will fail
+        solverOps[0] = helper.buildSolverOperation(userOp, solverOpData, solverOneEOA, address(solverOne), 2e17, 0);
+        (v, r, s) = vm.sign(solverOnePK, atlasVerification.getSolverPayload(solverOps[0]));
+        solverOps[0].signature = abi.encodePacked(r, s, v);
+
+        DAppOperation memory dAppOp = helper.buildDAppOperation(governanceEOA, userOp, solverOps);
+        (v, r, s) = vm.sign(governancePK, atlasVerification.getDAppOperationPayload(dAppOp));
+        dAppOp.signature = abi.encodePacked(r, s, v);
+
+        uint256 bondedBalanceBefore = atlas.balanceOfBonded(beneficiary);
+
+        console.log("Beneficiary's balance before metacall", beneficiary.balance);
+        console.log("Beneficiary's AtlETH bonded balance before metacall", bondedBalanceBefore);
+
+        assertEq(beneficiary.balance, 0, "Beneficiary should start with 0 balance");
+        assertEq(bondedBalanceBefore, 0, "Beneficiary's AtlETH bonded balance should start with 0");
+
+        vm.startPrank(userEOA);
+        IERC20(TOKEN_ONE).approve(address(atlas), type(uint256).max);
+        atlas.metacall(userOp, solverOps, dAppOp, beneficiary);
+        vm.stopPrank();
+
+        uint256 bondedBalanceAfter = atlas.balanceOfBonded(beneficiary);
+        console.log("Beneficiary's balance after metacall", beneficiary.balance);
+        console.log("Beneficiary's AtlETH bonded balance after metacall", bondedBalanceAfter);
+
+        assertEq(beneficiary.balance, 0, "Beneficiary should still have 0 balance");
+        assertGt(bondedBalanceAfter, 0, "Beneficiary's AtlETH bonded balance should be greater than 0");
     }
 }
