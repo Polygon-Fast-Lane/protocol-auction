@@ -107,7 +107,7 @@ contract Atlas is Escrow, Factory {
             // userOpHash has already been calculated and verified in validateCalls at this point, so rather
             // than re-calculate it, we can simply take it from the dAppOp here. It's worth noting that this will
             // be either a TRUSTED or DEFAULT hash, depending on the allowsTrustedOpHash setting.
-            try this.executeUserOpAndHooks(ctx, _dConfig, userOp)
+            try this.executeUserOps(ctx, _dConfig, userOp)
             returns (Context memory) {
                 // TODO: Handle the result
             } catch (bytes memory revertData) {
@@ -118,7 +118,7 @@ contract Atlas is Escrow, Factory {
             _releaseLock();
         }
 
-        try this.executeSolverOpsAndHooks(ctx, _dConfig, solverOps, dAppOp.maxFeePerGas)
+        try this.executeSolverOps(ctx, _dConfig, solverOps, dAppOp.maxFeePerGas)
         returns (Context memory) {
             // TODO: Handle the result
         } catch (bytes memory revertData) {
@@ -140,7 +140,7 @@ contract Atlas is Escrow, Factory {
     /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
     /// @param userOp UserOperation struct of the current metacall tx.
     /// @return ctx Context struct containing relevant context information for the Atlas auction.
-    function executeUserOpAndHooks(
+    function executeUserOps(
         Context memory ctx,
         DAppConfig memory dConfig,
         UserOperation calldata userOp
@@ -179,7 +179,7 @@ contract Atlas is Escrow, Factory {
     /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
     /// @param solverOps SolverOperation array of the current metacall tx.
     /// @return ctx Context struct containing relevant context information for the Atlas auction.
-    function executeSolverOpsAndHooks(
+    function executeSolverOps(
         Context memory ctx,
         DAppConfig memory dConfig,
         SolverOperation[] calldata solverOps,
