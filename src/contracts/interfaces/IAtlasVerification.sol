@@ -12,7 +12,7 @@ interface IAtlasVerification {
     // AtlasVerification.sol
     function validateCalls(
         DAppConfig calldata dConfig,
-        UserOperation calldata userOp,
+        UserOperation[] calldata userOps,
         SolverOperation[] calldata solverOps,
         DAppOperation calldata dAppOp,
         uint256 msgValue,

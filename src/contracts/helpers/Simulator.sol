@@ -24,19 +24,24 @@ contract Simulator is AtlasErrors {
         deployer = msg.sender;
     }
 
-    function simUserOperation(UserOperation calldata userOp)
+    function simUserOperation(UserOperation[] calldata userOps)
         external
         payable
         returns (bool success, Result simResult, uint256)
     {
-        if (userOp.value > address(this).balance) revert SimulatorBalanceTooLow();
+        uint256 value = 0;
+        for (uint256 i = 0; i < userOps.length; i++) {
+            value += userOps[i].value;
+        }
+        if (value > address(this).balance) revert SimulatorBalanceTooLow();
 
         SolverOperation[] memory solverOps = new SolverOperation[](0);
         DAppOperation memory dAppOp;
         dAppOp.to = atlas;
-        dAppOp.control = userOp.control;
+        // TODO: Fix this
+        dAppOp.control = userOps[0].control;
 
-        (Result result, uint256 validCallsResult) = _errorCatcher(userOp, solverOps, dAppOp);
+        (Result result, uint256 validCallsResult) = _errorCatcher(userOps, solverOps, dAppOp);
         success = uint8(result) > uint8(Result.UserOpSimFail);
         if (success) validCallsResult = uint256(ValidCallsResult.Valid);
         if (msg.value != 0) SafeTransferLib.safeTransferETH(msg.sender, msg.value);
@@ -57,7 +62,10 @@ contract Simulator is AtlasErrors {
         SolverOperation[] memory solverOps = new SolverOperation[](1);
         solverOps[0] = solverOp;
 
-        (Result result, uint256 solverOutcomeResult) = _errorCatcher(userOp, solverOps, dAppOp);
+        UserOperation[] memory userOps = new UserOperation[](1);    
+        userOps[0] = userOp;
+
+        (Result result, uint256 solverOutcomeResult) = _errorCatcher(userOps, solverOps, dAppOp);
         success = result == Result.SimulationPassed;
         if (success) solverOutcomeResult = 0; // discard additional error uint if solver stage was successful
         if (msg.value != 0) SafeTransferLib.safeTransferETH(msg.sender, msg.value);
@@ -65,7 +73,7 @@ contract Simulator is AtlasErrors {
     }
 
     function simSolverCalls(
-        UserOperation calldata userOp,
+        UserOperation[] calldata userOps,
         SolverOperation[] calldata solverOps,
         DAppOperation calldata dAppOp
     )
@@ -73,13 +81,15 @@ contract Simulator is AtlasErrors {
         payable
         returns (bool success, Result simResult, uint256)
     {
-        if (userOp.value > address(this).balance) revert SimulatorBalanceTooLow();
+        for (uint256 i = 0; i < userOps.length; i++) {  
+            if (userOps[i].value > address(this).balance) revert SimulatorBalanceTooLow();
+        }
 
         if (solverOps.length == 0) {
             // Returns number out of usual range of SolverOutcome enum to indicate no solverOps
             return (false, Result.Unknown, uint256(type(SolverOutcome).max) + 1);
         }
-        (Result result, uint256 solverOutcomeResult) = _errorCatcher(userOp, solverOps, dAppOp);
+        (Result result, uint256 solverOutcomeResult) = _errorCatcher(userOps, solverOps, dAppOp);
         success = result == Result.SimulationPassed;
         if (success) solverOutcomeResult = 0; // discard additional error uint if solver stage was successful
         if (msg.value != 0) SafeTransferLib.safeTransferETH(msg.sender, msg.value);
@@ -87,14 +97,18 @@ contract Simulator is AtlasErrors {
     }
 
     function _errorCatcher(
-        UserOperation memory userOp,
+        UserOperation[] memory userOps,
         SolverOperation[] memory solverOps,
         DAppOperation memory dAppOp
     )
         internal
         returns (Result result, uint256 additionalErrorCode)
     {
-        try this.metacallSimulation{ value: userOp.value }(userOp, solverOps, dAppOp) {
+        uint256 value = 0;
+        for (uint256 i = 0; i < userOps.length; i++) {
+            value += userOps[i].value;
+        }
+        try this.metacallSimulation{ value: value }(userOps, solverOps, dAppOp, address(0)) {
             revert Unreachable();
         } catch (bytes memory revertData) {
             bytes4 errorSwitch = bytes4(revertData);
@@ -136,15 +150,16 @@ contract Simulator is AtlasErrors {
     }
 
     function metacallSimulation(
-        UserOperation calldata userOp,
+        UserOperation[] calldata userOps,
         SolverOperation[] calldata solverOps,
-        DAppOperation calldata dAppOp
+        DAppOperation calldata dAppOp,
+        address bundler
     )
         external
         payable
     {
         if (msg.sender != address(this)) revert InvalidEntryFunction();
-        if (!IAtlas(atlas).metacall{ value: msg.value }(userOp, solverOps, dAppOp, address(0))) {
+        if (!IAtlas(atlas).metacall{ value: msg.value }(userOps, solverOps, dAppOp, bundler)) {
             revert NoAuctionWinner(); // should be unreachable
         }
         revert SimulationPassed();

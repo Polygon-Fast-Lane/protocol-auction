@@ -155,7 +155,7 @@ abstract contract DAppControlTemplate {
     // View functions used by the backend to verify bid format
     // and by the factory and DAppVerification to verify the
     // backend.
-    function getBidFormat(UserOperation calldata userOp) public view virtual returns (address bidToken);
+    function getBidFormat() public view virtual returns (address bidToken);
 
     function getBidValue(SolverOperation calldata solverOp) public view virtual returns (uint256);
 

@@ -39,7 +39,7 @@ contract Sorter is AtlasConstants {
         view
         returns (SolverOperation[] memory)
     {
-        DAppConfig memory dConfig = IDAppControl(userOp.control).getDAppConfig(userOp);
+        DAppConfig memory dConfig = IDAppControl(userOp.control).getDAppConfig();
 
         uint256 count = solverOps.length;
 

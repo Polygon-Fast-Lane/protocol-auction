@@ -51,32 +51,29 @@ contract Atlas is Escrow, Factory {
     /// @notice metacall is the entrypoint function for the Atlas transactions.
     /// @dev Any ETH sent as msg.value with a metacall should be considered a potential subsidy for the winning solver's
     /// gas repayment.
-    /// @param userOp The UserOperation struct containing the user's transaction data.
+    /// @param userOps The UserOperation array containing the user's transaction data.
     /// @param solverOps The SolverOperation array containing the solvers' transaction data.
     /// @param dAppOp The DAppOperation struct containing the DApp's transaction data.
     /// @param gasRefundBeneficiary The address to receive the gas refund.
     /// @return auctionWon A boolean indicating whether there was a successful, winning solver.
     function metacall(
-        UserOperation calldata userOp, // set by user
-        SolverOperation[] calldata solverOps, // supplied by ops relay
-        DAppOperation calldata dAppOp, // supplied by front end via atlas SDK
-        address gasRefundBeneficiary // address(0) = msg.sender
+        UserOperation[] calldata userOps,
+        SolverOperation[] calldata solverOps,
+        DAppOperation calldata dAppOp,
+        address gasRefundBeneficiary
     )
         external
         payable
         returns (bool auctionWon)
     {
-        uint256 _gasMarker = L2_GAS_CALCULATOR == address(0)
-            ? gasleft() + _BASE_TRANSACTION_GAS_USED + (msg.data.length * _CALLDATA_LENGTH_PREMIUM_HALVED)
-            : gasleft() + IL2GasCalculator(L2_GAS_CALCULATOR).initialGasUsed(msg.data.length);
-
         bool _isSimulation = msg.sender == SIMULATOR;
         address _bundler = _isSimulation ? dAppOp.bundler : msg.sender;
-        (address _executionEnvironment, DAppConfig memory _dConfig) = _getOrCreateExecutionEnvironment(userOp);
+
+        // Get the DAppConfig
+        DAppConfig memory _dConfig = IDAppControl(dAppOp.control).getDAppConfig();
 
         {
-            ValidCallsResult _validCallsResult =
-                VERIFICATION.validateCalls(_dConfig, userOp, solverOps, dAppOp, msg.value, _bundler, _isSimulation);
+            ValidCallsResult _validCallsResult = VERIFICATION.validateCalls(_dConfig, userOps, solverOps, dAppOp, msg.value, _bundler, _isSimulation);
             if (_validCallsResult != ValidCallsResult.Valid) {
                 if (_isSimulation) revert VerificationSimFail(_validCallsResult);
 
@@ -91,24 +88,41 @@ contract Atlas is Escrow, Factory {
             }
         }
 
-        // Initialize the environment lock and accounting values
-        _setEnvironmentLock(_dConfig, _executionEnvironment);
-        _initializeAccountingValues(_gasMarker);
+        // Build the context object
+        Context memory ctx = _buildContext(address(0), bytes32(0), _bundler, uint8(solverOps.length), _isSimulation);
 
-        // userOpHash has already been calculated and verified in validateCalls at this point, so rather
-        // than re-calculate it, we can simply take it from the dAppOp here. It's worth noting that this will
-        // be either a TRUSTED or DEFAULT hash, depending on the allowsTrustedOpHash setting.
-        try this.execute(_dConfig, userOp, solverOps, _executionEnvironment, _bundler, dAppOp.userOpHash, _isSimulation)
-        returns (Context memory ctx) {
-            // Gas Refund to sender only if execution is successful
-            (uint256 _ethPaidToBundler, uint256 _netGasSurcharge) =
-                _settle(ctx, _dConfig.solverGasLimit, gasRefundBeneficiary);
+        for (uint256 i = 0; i < userOps.length; i++) {
+            uint256 _userOpGasStart = gasleft();
+            UserOperation calldata userOp = userOps[i];
+            
+            address _executionEnvironment = _getOrCreateExecutionEnvironment(userOp, _dConfig.callConfig);
 
-            auctionWon = ctx.solverSuccessful;
-            emit MetacallResult(
-                msg.sender, userOp.from, auctionWon, ctx.paymentsSuccessful, _ethPaidToBundler, _netGasSurcharge
-            );
+            // Set the context values
+            ctx.executionEnvironment = _executionEnvironment;
+            ctx.userOpHash = VERIFICATION.getUserOperationHash(userOp);
+
+            // Initialize the environment lock and accounting values
+            _setEnvironmentLock(_dConfig, _executionEnvironment);
+
+            // userOpHash has already been calculated and verified in validateCalls at this point, so rather
+            // than re-calculate it, we can simply take it from the dAppOp here. It's worth noting that this will
+            // be either a TRUSTED or DEFAULT hash, depending on the allowsTrustedOpHash setting.
+            try this.executeUserOpAndHooks(ctx, _dConfig, userOp)
+            returns (Context memory) {
+                // TODO: Handle the result
+            } catch (bytes memory revertData) {
+                // TODO: Handle the error
+            }
+
+            // The environment lock is explicitly released here to allow multiple metacalls in a single transaction.
+            _releaseLock();
+        }
+
+        try this.executeSolverOpsAndHooks(ctx, _dConfig, solverOps, dAppOp.maxFeePerGas)
+        returns (Context memory) {
+            // TODO: Handle the result
         } catch (bytes memory revertData) {
+            // TODO: Handle the error
             // Bubble up some specific errors
             _handleErrors(revertData, _dConfig.callConfig);
             // Set lock to FullyLocked to prevent any reentrancy possibility
@@ -118,43 +132,29 @@ contract Atlas is Escrow, Factory {
             // WARNING: If msg.sender is a disposable address such as a session key, make sure to remove ETH from it
             // before disposal
             if (msg.value != 0) SafeTransferLib.safeTransferETH(msg.sender, msg.value);
-
-            // Emit event indicating the metacall failed in `execute()`
-            emit MetacallResult(msg.sender, userOp.from, false, false, 0, 0);
         }
-
-        // The environment lock is explicitly released here to allow multiple metacalls in a single transaction.
-        _releaseLock();
     }
 
     /// @notice execute is called above, in a try-catch block in metacall.
+    /// @param ctx Context struct containing relevant context information for the Atlas auction.
     /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
     /// @param userOp UserOperation struct of the current metacall tx.
-    /// @param solverOps SolverOperation array of the current metacall tx.
-    /// @param executionEnvironment Address of the execution environment contract of the current metacall tx.
-    /// @param bundler Address of the bundler of the current metacall tx.
-    /// @param userOpHash Hash of the userOp struct of the current metacall tx.
     /// @return ctx Context struct containing relevant context information for the Atlas auction.
-    function execute(
+    function executeUserOpAndHooks(
+        Context memory ctx,
         DAppConfig memory dConfig,
-        UserOperation calldata userOp,
-        SolverOperation[] calldata solverOps,
-        address executionEnvironment,
-        address bundler,
-        bytes32 userOpHash,
-        bool isSimulation
+        UserOperation calldata userOp
     )
         external
         payable
-        returns (Context memory ctx)
+        returns (Context memory)
     {
         // This is a self.call made externally so that it can be used with try/catch
         if (msg.sender != address(this)) revert InvalidAccess();
 
-        // Build the context object
-        ctx = _buildContext(executionEnvironment, userOpHash, bundler, uint8(solverOps.length), isSimulation);
-
         bytes memory _returnData;
+
+        uint256 _userOpGasStart = gasleft();
 
         // PreOps Call
         if (dConfig.callConfig.needsPreOpsCall()) {
@@ -164,36 +164,61 @@ contract Atlas is Escrow, Factory {
         // UserOp Call
         _returnData = _executeUserOperation(ctx, dConfig, userOp, _returnData);
 
+        // PostOp Call
+        if (dConfig.callConfig.needsPostOpsCall()) {
+            _executePostOpsCall(ctx, ctx.solverSuccessful, _returnData);
+        }
+
+        //TODO some sort of gas accounting structure here
+        _updateGasRefunds(ctx, msg.sender, userOp.from, _userOpGasStart);
+        return ctx;
+    }
+
+    /// @notice execute is called above, in a try-catch block in metacall.
+    /// @param ctx Context struct containing relevant context information for the Atlas auction.
+    /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
+    /// @param solverOps SolverOperation array of the current metacall tx.
+    /// @return ctx Context struct containing relevant context information for the Atlas auction.
+    function executeSolverOpsAndHooks(
+        Context memory ctx,
+        DAppConfig memory dConfig,
+        SolverOperation[] calldata solverOps,
+        uint256 maxFeePerGas
+    )
+        external
+        payable
+        returns (Context memory)
+    {
+        // This is a self.call made externally so that it can be used with try/catch
+        if (msg.sender != address(this)) revert InvalidAccess();
+
+        bytes memory _returnData;
+
         // SolverOps Calls
         uint256 _winningBidAmount = dConfig.callConfig.exPostBids()
-            ? _bidFindingIteration(ctx, dConfig, userOp, solverOps, _returnData)
-            : _bidKnownIteration(ctx, dConfig, userOp, solverOps, _returnData);
+            ? _bidFindingIteration(ctx, dConfig, solverOps, _returnData, maxFeePerGas)
+            : _bidKnownIteration(ctx, dConfig, solverOps, _returnData, maxFeePerGas);
 
         // AllocateValue Call
         if (ctx.solverSuccessful) {
             _allocateValue(ctx, dConfig, _winningBidAmount, _returnData);
         }
-
-        // PostOp Call
-        if (dConfig.callConfig.needsPostOpsCall()) {
-            _executePostOpsCall(ctx, ctx.solverSuccessful, _returnData);
-        }
+        return ctx;
     }
 
     /// @notice Called above in `execute` if the DAppConfig requires ex post bids. Sorts solverOps by bid amount and
     /// executes them in descending order until a successful winner is found.
     /// @param ctx Context struct containing the current state of the escrow lock.
     /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
-    /// @param userOp UserOperation struct of the current metacall tx.
     /// @param solverOps SolverOperation array of the current metacall tx.
     /// @param returnData Return data from the preOps and userOp calls.
     /// @return The winning bid amount or 0 when no solverOps.
     function _bidFindingIteration(
         Context memory ctx,
         DAppConfig memory dConfig,
-        UserOperation calldata userOp,
         SolverOperation[] calldata solverOps,
-        bytes memory returnData
+        bytes memory returnData,
+        uint256 maxFeePerGas
     )
         internal
         returns (uint256)
@@ -230,7 +255,7 @@ contract Atlas is Escrow, Factory {
         // |<------------------ 240 bits ---------------->|<------- 16 bits ------->|
 
         for (uint256 i; i < solverOpsLength; ++i) {
-            _bidAmountFound = _getBidAmount(ctx, dConfig, userOp, solverOps[i], returnData);
+            _bidAmountFound = _getBidAmount(ctx, dConfig, solverOps[i], returnData, maxFeePerGas);
 
             // skip zero and overflow bid's
             if (_bidAmountFound != 0 && _bidAmountFound <= type(uint240).max) {
@@ -257,6 +282,7 @@ contract Atlas is Escrow, Factory {
 
         // Finally, iterate through sorted bidsAndIndices array in descending order of bidAmount.
         for (uint256 i = _bidsAndIndicesLastIndex;; /* breaks when 0 */ --i) {
+            uint256 solverGasStart = gasleft();
             // Isolate the bidAmount from the packed uint256 value
             _bidAmountFound = _bidsAndIndices[i] >> _BITS_FOR_INDEX;
 
@@ -273,8 +299,10 @@ contract Atlas is Escrow, Factory {
 
             // Execute the solver operation. If solver won, allocate value and return. Otherwise continue looping.
             _bidAmountFound = _executeSolverOperation(
-                ctx, dConfig, userOp, solverOps[_solverIndex], _bidAmountFound, true, returnData
+                ctx, dConfig, solverOps[_solverIndex], _bidAmountFound, true, returnData, maxFeePerGas
             );
+
+            _updateGasRefunds(ctx, msg.sender, solverOps[_solverIndex].from, solverGasStart);
 
             if (ctx.solverSuccessful) {
                 return _bidAmountFound;
@@ -291,16 +319,15 @@ contract Atlas is Escrow, Factory {
     /// reliably sorted. Executes solverOps in order until a successful winner is found.
     /// @param ctx Context struct containing the current state of the escrow lock.
     /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
-    /// @param userOp UserOperation struct of the current metacall tx.
     /// @param solverOps SolverOperation array of the current metacall tx.
     /// @param returnData Return data from the preOps and userOp calls.
     /// @return The winning bid amount or 0 when no solverOps.
     function _bidKnownIteration(
         Context memory ctx,
         DAppConfig memory dConfig,
-        UserOperation calldata userOp,
         SolverOperation[] calldata solverOps,
-        bytes memory returnData
+        bytes memory returnData,
+        uint256 maxFeePerGas
     )
         internal
         returns (uint256)
@@ -309,13 +336,16 @@ contract Atlas is Escrow, Factory {
 
         uint8 i = uint8(solverOps.length);
         for (; ctx.solverIndex < i; ctx.solverIndex++) {
+            uint256 solverGasStart = gasleft();
             SolverOperation calldata solverOp = solverOps[ctx.solverIndex];
 
-            _bidAmount = _executeSolverOperation(ctx, dConfig, userOp, solverOp, solverOp.bidAmount, false, returnData);
+            _bidAmount = _executeSolverOperation(ctx, dConfig, solverOp, solverOp.bidAmount, false, returnData, maxFeePerGas);
 
             if (ctx.solverSuccessful) {
                 return _bidAmount;
             }
+
+            _updateGasRefunds(ctx, msg.sender, solverOp.from, solverGasStart);
         }
         if (ctx.isSimulation) revert SolverSimFail(uint256(ctx.solverOutcome));
         if (dConfig.callConfig.needsFulfillment()) revert UserNotFulfilled();
@@ -378,5 +408,17 @@ contract Atlas is Escrow, Factory {
         returns (bool)
     {
         return environment == _getExecutionEnvironmentCustom(user, control, callConfig);
+    }
+
+    function _updateGasRefunds(
+        Context memory ctx,
+        address payor,
+        address payee,
+        uint256 startGasLeft
+    )
+        internal
+        view
+    {
+        // TODO do some gas accounting
     }
 }

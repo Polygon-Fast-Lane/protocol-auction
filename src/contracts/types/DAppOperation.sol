@@ -15,4 +15,5 @@ struct DAppOperation {
     bytes32 userOpHash; // keccak256 of userOp.to, userOp.data
     bytes32 callChainHash; // keccak256 of the solvers' txs
     bytes signature; // DAppOperation signed by DAppOperation.from
+    uint256 maxFeePerGas; // max fee per gas for the DAppOperation
 }

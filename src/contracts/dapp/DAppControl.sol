@@ -160,9 +160,8 @@ abstract contract DAppControl is DAppControlTemplate, ExecutionBase {
     }
 
     /// @notice Returns the DAppConfig struct of this DAppControl contract.
-    /// @param userOp The UserOperation struct.
     /// @return dConfig The DAppConfig struct of this DAppControl contract.
-    function getDAppConfig(UserOperation calldata userOp)
+    function getDAppConfig()
         external
         view
         mustBeCalled
@@ -171,7 +170,7 @@ abstract contract DAppControl is DAppControlTemplate, ExecutionBase {
         dConfig = DAppConfig({
             to: address(this),
             callConfig: CALL_CONFIG,
-            bidToken: getBidFormat(userOp),
+            bidToken: getBidFormat(),
             solverGasLimit: getSolverGasLimit()
         });
     }

@@ -30,17 +30,17 @@ contract AtlasVerification is EIP712, NonceManager, DAppIntegration {
     constructor(address atlas) EIP712("AtlasVerification", "1.0") DAppIntegration(atlas) { }
 
     /// @notice The validateCalls function verifies the validity of the metacall calldata components.
-    /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
-    /// @param userOp The UserOperation struct of the metacall.
+    /// @param userOps An array of UserOperation structs.
     /// @param solverOps An array of SolverOperation structs.
     /// @param dAppOp The DAppOperation struct of the metacall.
+    /// @param dConfig The DAppConfig struct of the metacall.
     /// @param msgValue The ETH value sent with the metacall transaction.
     /// @param msgSender The forwarded msg.sender of the original metacall transaction in the Atlas contract.
     /// @param isSimulation A boolean indicating if the call is a simulation.
     /// @return The result of the ValidCalls check, in enum ValidCallsResult form.
     function validateCalls(
         DAppConfig calldata dConfig,
-        UserOperation calldata userOp,
+        UserOperation[] calldata userOps,
         SolverOperation[] calldata solverOps,
         DAppOperation calldata dAppOp,
         uint256 msgValue,
@@ -53,50 +53,80 @@ contract AtlasVerification is EIP712, NonceManager, DAppIntegration {
         if (msg.sender != ATLAS) revert AtlasErrors.InvalidCaller();
         // Verify that the calldata injection came from the dApp frontend
         // and that the signatures are valid.
+        
+        for (uint256 i = 0; i < userOps.length; i++) {
+            UserOperation calldata userOp = userOps[i];            
 
-        bytes32 _userOpHash = _getUserOperationHash(userOp, userOp.callConfig.allowsTrustedOpHash());
+            bytes32 _userOpHash = _getUserOperationHash(userOp, userOp.callConfig.allowsTrustedOpHash());
 
-        {
-            // Check user signature
-            ValidCallsResult verifyUserResult = _verifyUser(dConfig, userOp, _userOpHash, msgSender, isSimulation);
-            if (verifyUserResult != ValidCallsResult.Valid) {
-                return verifyUserResult;
-            }
-
-            // allowUnapprovedDAppSignatories still verifies signature match, but does not check
-            // if dApp owner approved the signer.
-            (ValidCallsResult verifyAuctioneerResult, bool allowUnapprovedDAppSignatories) =
-                _verifyAuctioneer(dConfig, userOp, solverOps, dAppOp, msgSender);
-
-            if (verifyAuctioneerResult != ValidCallsResult.Valid && !isSimulation) {
-                return verifyAuctioneerResult;
-            }
-
-            // Check dapp signature
-            ValidCallsResult verifyDappResult =
-                _verifyDApp(dConfig, dAppOp, msgSender, allowUnapprovedDAppSignatories, isSimulation);
-            if (verifyDappResult != ValidCallsResult.Valid) {
-                return verifyDappResult;
-            }
-        }
-
-        // Check if the call configuration is valid
-        ValidCallsResult _verifyCallConfigResult = _verifyCallConfig(dConfig.callConfig);
-        if (_verifyCallConfigResult != ValidCallsResult.Valid) {
-            return _verifyCallConfigResult;
-        }
-
-        // CASE: Solvers trust app to update content of UserOp after submission of solverOp
-        if (dConfig.callConfig.allowsTrustedOpHash()) {
-            // SessionKey must match explicitly - cannot be skipped
-            if (userOp.sessionKey != dAppOp.from && !isSimulation) {
-                return ValidCallsResult.InvalidAuctioneer;
-            }
-
-            // msgSender (the bundler) must be userOp.from, userOp.sessionKey / dappOp.from, or dappOp.bundler
-            if (!(msgSender == dAppOp.from || msgSender == dAppOp.bundler || msgSender == userOp.from) && !isSimulation)
             {
-                return ValidCallsResult.InvalidBundler;
+                // Check user signature
+                ValidCallsResult verifyUserResult = _verifyUser(dConfig, userOp, _userOpHash, msgSender, isSimulation);
+                if (verifyUserResult != ValidCallsResult.Valid) {
+                    return verifyUserResult;
+                }
+
+                // allowUnapprovedDAppSignatories still verifies signature match, but does not check
+                // if dApp owner approved the signer.
+                (ValidCallsResult verifyAuctioneerResult, bool allowUnapprovedDAppSignatories) =
+                    _verifyAuctioneer(dConfig, userOp, solverOps, dAppOp, msgSender);
+
+                if (verifyAuctioneerResult != ValidCallsResult.Valid && !isSimulation) {
+                    return verifyAuctioneerResult;
+                }
+
+                // Check dapp signature
+                ValidCallsResult verifyDappResult =
+                    _verifyDApp(dConfig, dAppOp, msgSender, allowUnapprovedDAppSignatories, isSimulation);
+                if (verifyDappResult != ValidCallsResult.Valid) {
+                    return verifyDappResult;
+                }
+            }
+            {
+
+                // Check if past user's deadline
+                if (userOp.deadline != 0 && block.number > userOp.deadline) {
+                    return ValidCallsResult.UserDeadlineReached;
+                }
+
+                // Check gas price is within user's limit
+                if (tx.gasprice > userOp.maxFeePerGas) {
+                    return ValidCallsResult.GasPriceHigherThanMax;
+                }
+
+                // Check that the value of the tx is greater than or equal to the value specified
+                if (msgValue < userOp.value) {
+                    return ValidCallsResult.TxValueLowerThanCallValue;
+                }
+
+                // Check the call config read at the start of the metacall is same as user expected (as set in userOp)
+                if (dConfig.callConfig != userOp.callConfig) {
+                    return ValidCallsResult.CallConfigMismatch;
+                }
+            }
+
+            // Check if the call configuration is valid
+            ValidCallsResult _verifyCallConfigResult = _verifyCallConfig(dConfig.callConfig);
+            if (_verifyCallConfigResult != ValidCallsResult.Valid) {
+                return _verifyCallConfigResult;
+            }
+
+            // CASE: Solvers trust app to update content of UserOp after submission of solverOp
+            if (dConfig.callConfig.allowsTrustedOpHash()) {
+                // SessionKey must match explicitly - cannot be skipped
+                if (userOp.sessionKey != dAppOp.from && !isSimulation) {
+                    return ValidCallsResult.InvalidAuctioneer;
+                }
+
+                // msgSender (the bundler) must be userOp.from, userOp.sessionKey / dappOp.from, or dappOp.bundler
+                if (!(msgSender == dAppOp.from || msgSender == dAppOp.bundler || msgSender == userOp.from) && !isSimulation)
+                {
+                    return ValidCallsResult.InvalidBundler;
+                }
+            }
+
+            if (_userOpHash != dAppOp.userOpHash) {
+                return ValidCallsResult.OpHashMismatch;
             }
         }
 
@@ -108,29 +138,9 @@ contract AtlasVerification is EIP712, NonceManager, DAppIntegration {
                 return ValidCallsResult.TooManySolverOps;
             }
 
-            // Check if past user's deadline
-            if (userOp.deadline != 0 && block.number > userOp.deadline) {
-                return ValidCallsResult.UserDeadlineReached;
-            }
-
             // Check if past dapp's deadline
             if (dAppOp.deadline != 0 && block.number > dAppOp.deadline) {
                 return ValidCallsResult.DAppDeadlineReached;
-            }
-
-            // Check gas price is within user's limit
-            if (tx.gasprice > userOp.maxFeePerGas) {
-                return ValidCallsResult.GasPriceHigherThanMax;
-            }
-
-            // Check that the value of the tx is greater than or equal to the value specified
-            if (msgValue < userOp.value) {
-                return ValidCallsResult.TxValueLowerThanCallValue;
-            }
-
-            // Check the call config read at the start of the metacall is same as user expected (as set in userOp)
-            if (dConfig.callConfig != userOp.callConfig) {
-                return ValidCallsResult.CallConfigMismatch;
             }
         }
 
@@ -151,9 +161,7 @@ contract AtlasVerification is EIP712, NonceManager, DAppIntegration {
             }
         }
 
-        if (_userOpHash != dAppOp.userOpHash) {
-            return ValidCallsResult.OpHashMismatch;
-        }
+
 
         return ValidCallsResult.Valid;
     }

@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import { FactoryLib } from "./FactoryLib.sol";
 
 import { IDAppControl } from "../interfaces/IDAppControl.sol";
-import { DAppConfig } from "../types/ConfigTypes.sol";
 import { UserOperation } from "../types/UserOperation.sol";
 import { AtlasErrors } from "../types/AtlasErrors.sol";
 
@@ -58,16 +57,14 @@ abstract contract Factory {
     /// operation.
     /// @param userOp The user operation containing details about the user and the DAppControl contract.
     /// @return executionEnvironment The address of the execution environment that was found or created.
-    /// @return dConfig The DAppConfig for the execution environment, specifying how operations should be handled.
-    function _getOrCreateExecutionEnvironment(UserOperation calldata userOp)
+    function _getOrCreateExecutionEnvironment(UserOperation calldata userOp, uint32 callConfig)
         internal
-        returns (address executionEnvironment, DAppConfig memory dConfig)
+        returns (address executionEnvironment)
     {
-        dConfig = IDAppControl(userOp.control).getDAppConfig(userOp);
         executionEnvironment = _getOrCreateExecutionEnvironment({
             user: userOp.from,
             control: userOp.control,
-            callConfig: dConfig.callConfig
+            callConfig: callConfig
         });
     }
 

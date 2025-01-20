@@ -116,6 +116,7 @@ contract TxBuilder {
 
     function buildDAppOperation(
         address governance,
+        uint256 maxFeePerGas,
         UserOperation memory userOp,
         SolverOperation[] memory solverOps
     )
@@ -136,7 +137,8 @@ contract TxBuilder {
             bundler: address(0),
             userOpHash: userOpHash,
             callChainHash: callChainHash,
-            signature: new bytes(0)
+            signature: new bytes(0),
+            maxFeePerGas: maxFeePerGas
         });
     }
 }

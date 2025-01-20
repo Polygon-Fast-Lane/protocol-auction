@@ -135,7 +135,6 @@ abstract contract Escrow is AtlETH {
     /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
     /// @param prevalidated Boolean flag indicating whether the SolverOperation has been prevalidated to skip certain
     /// checks.
-    /// @param userOp UserOperation struct containing the user's transaction data relevant to this SolverOperation.
     /// @param solverOp SolverOperation struct containing the solver's bid and execution data.
     /// @param result The current result bitmask that tracks the status of various checks and validations.
     /// @return The updated result bitmask with the AltOpHashMismatch bit set if the operation hash does not match.
@@ -158,7 +157,6 @@ abstract contract Escrow is AtlETH {
     /// @notice Attempts to execute a SolverOperation and determine if it wins the auction.
     /// @param ctx Context struct containing the current state of the escrow lock.
     /// @param dConfig Configuration data for the DApp involved, containing execution parameters and settings.
-    /// @param userOp UserOperation struct containing the user's transaction data relevant to this SolverOperation.
     /// @param solverOp SolverOperation struct containing the solver's bid and execution data.
     /// @param bidAmount The amount of bid submitted by the solver for this operation.
     /// @param prevalidated Boolean flag indicating whether the SolverOperation has been prevalidated to skip certain
@@ -168,11 +166,11 @@ abstract contract Escrow is AtlETH {
     function _executeSolverOperation(
         Context memory ctx,
         DAppConfig memory dConfig,
-        UserOperation calldata userOp,
         SolverOperation calldata solverOp,
         uint256 bidAmount,
         bool prevalidated,
-        bytes memory returnData
+        bytes memory returnData,
+        uint256 maxFeePerGas
     )
         internal
         returns (uint256)
@@ -182,7 +180,7 @@ abstract contract Escrow is AtlETH {
         uint256 _result;
         if (!prevalidated) {
             _result = VERIFICATION.verifySolverOp(
-                solverOp, ctx.userOpHash, userOp.maxFeePerGas, ctx.bundler, dConfig.callConfig.allowsTrustedOpHash()
+                solverOp, ctx.userOpHash, maxFeePerGas, ctx.bundler, dConfig.callConfig.allowsTrustedOpHash()
             );
             _result = _checkSolverBidToken(solverOp.bidToken, dConfig.bidToken, _result);
         }
@@ -195,7 +193,8 @@ abstract contract Escrow is AtlETH {
             _result |= _validateSolverOpDeadline(solverOp, dConfig);
 
             // Check for trusted operation hash
-            _result = _checkTrustedOpHash(dConfig, prevalidated, userOp, solverOp, _result);
+            //TODO: COME BACK TO THIS
+            // _result = _checkTrustedOpHash(dConfig, prevalidated, userOp, solverOp, _result);
 
             // If there are no errors, attempt to execute
             if (_result.canExecute()) {
@@ -207,7 +206,7 @@ abstract contract Escrow is AtlETH {
                 if (_result.executionSuccessful()) {
                     // First successful solver call that paid what it bid
                     emit SolverTxResult(
-                        solverOp.solver, solverOp.from, dConfig.to, solverOp.bidToken, bidAmount, true, true, _result
+                        solverOp.solver, solverOp.from, true, true, _result, bidAmount, solverOp.bidToken
                     );
 
                     ctx.solverSuccessful = true;
@@ -224,14 +223,7 @@ abstract contract Escrow is AtlETH {
         _handleSolverAccounting(solverOp, _gasWaterMark, _result, !prevalidated);
 
         emit SolverTxResult(
-            solverOp.solver,
-            solverOp.from,
-            dConfig.to,
-            solverOp.bidToken,
-            bidAmount,
-            _result.executedWithError(),
-            false,
-            _result
+            solverOp.solver, solverOp.from, _result.executedWithError(), false, _result, bidAmount, solverOp.bidToken
         );
 
         return 0;
@@ -398,8 +390,6 @@ abstract contract Escrow is AtlETH {
     /// attempts to execute and determine the bid amount.
     /// @param ctx The Context struct containing the current state of the escrow lock.
     /// @param dConfig The DApp configuration data, including parameters relevant to solver bid validation.
-    /// @param userOp The UserOperation associated with this SolverOperation, providing context for the bid amount
-    /// determination.
     /// @param solverOp The SolverOperation being assessed, containing the solver's bid amount.
     /// @param returnData Data returned from the execution of the UserOp call.
     /// @return bidAmount The determined bid amount for the SolverOperation if all validations pass and the operation is
@@ -407,9 +397,9 @@ abstract contract Escrow is AtlETH {
     function _getBidAmount(
         Context memory ctx,
         DAppConfig memory dConfig,
-        UserOperation calldata userOp,
         SolverOperation calldata solverOp,
-        bytes memory returnData
+        bytes memory returnData,
+        uint256 maxFeePerGas
     )
         internal
         returns (uint256 bidAmount)
@@ -421,7 +411,7 @@ abstract contract Escrow is AtlETH {
         uint256 _gasLimit;
 
         uint256 _result = VERIFICATION.verifySolverOp(
-            solverOp, ctx.userOpHash, userOp.maxFeePerGas, ctx.bundler, dConfig.callConfig.allowsTrustedOpHash()
+            solverOp, ctx.userOpHash, maxFeePerGas, ctx.bundler, dConfig.callConfig.allowsTrustedOpHash()
         );
 
         _result = _checkSolverBidToken(solverOp.bidToken, dConfig.bidToken, _result);
@@ -431,11 +421,12 @@ abstract contract Escrow is AtlETH {
         // Verify the transaction.
         if (!_result.canExecute()) return 0;
 
-        if (dConfig.callConfig.allowsTrustedOpHash()) {
-            if (!_handleAltOpHash(userOp, solverOp)) {
-                return (0);
-            }
-        }
+        //TODO: COME BACK TO THIS
+        // if (dConfig.callConfig.allowsTrustedOpHash()) {
+        //     if (!_handleAltOpHash(userOp, solverOp)) {
+        //         return (0);
+        //     }
+        // }
 
         (bool _success, bytes memory _data) = address(this).call{ gas: _gasLimit }(
             abi.encodeCall(this.solverCall, (ctx, solverOp, solverOp.bidAmount, returnData))

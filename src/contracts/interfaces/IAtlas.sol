@@ -9,7 +9,7 @@ import "../types/LockTypes.sol";
 interface IAtlas {
     // Atlas.sol
     function metacall(
-        UserOperation calldata userOp,
+        UserOperation[] calldata userOps,
         SolverOperation[] calldata solverOps,
         DAppOperation calldata dAppOp,
         address gasRefundBeneficiary
