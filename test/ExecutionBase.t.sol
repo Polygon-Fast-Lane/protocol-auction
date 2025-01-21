@@ -73,6 +73,7 @@ contract ExecutionBaseTest is BaseTest {
         pure
         returns (bytes memory firstSet, Context memory _ctx)
     {
+        Reimbursement[] memory reimbursements;
         _ctx = Context({
             executionEnvironment: address(123),
             userOpHash: bytes32(uint256(456)),
@@ -85,7 +86,8 @@ contract ExecutionBaseTest is BaseTest {
             solverOutcome: 2,
             bidFind: true,
             isSimulation: false,
-            callDepth: 1
+            callDepth: 1,
+            reimbursements: reimbursements
         });
 
         firstSet = abi.encodePacked(

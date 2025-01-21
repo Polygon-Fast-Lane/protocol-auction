@@ -65,6 +65,7 @@ contract Permit69Test is BaseTest {
             callConfig: mockCallConfig
         });
 
+        Reimbursement[] memory reimbursements;
         ctx = Context({
             executionEnvironment: mockExecutionEnvAddress,
             userOpHash: bytes32(0),
@@ -77,7 +78,8 @@ contract Permit69Test is BaseTest {
             solverOutcome: 0,
             bidFind: false,
             isSimulation: false,
-            callDepth: 0
+            callDepth: 0,
+            reimbursements: reimbursements
         });
 
         mockAtlas.setLock(mockExecutionEnvAddress, mockCallConfig);

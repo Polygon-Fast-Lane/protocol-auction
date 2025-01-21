@@ -19,6 +19,8 @@ import { SafetyBits } from "src/contracts/libraries/SafetyBits.sol";
 import { IL2GasCalculator } from "src/contracts/interfaces/IL2GasCalculator.sol";
 import { IDAppControl } from "src/contracts/interfaces/IDAppControl.sol";
 
+import "forge-std/Test.sol";
+
 /// @title Atlas V1
 /// @author FastLane Labs
 /// @notice The Execution Abstraction protocol.
@@ -145,6 +147,8 @@ contract Atlas is Escrow, Factory {
         if (dConfig.callConfig.needsPreOpsCall()) {
             _returnData = _executePreOpsCall(ctx, dConfig, userOp);
         }
+
+        console.log(ctx.reimbursements[0].reimburser);
 
         // UserOp Call
         _returnData = _executeUserOperation(ctx, dConfig, userOp, _returnData);

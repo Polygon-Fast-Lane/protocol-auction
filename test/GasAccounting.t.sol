@@ -94,6 +94,7 @@ contract MockGasAccounting is TestAtlas, BaseTest {
         view
         returns (Context memory ctx)
     {
+        Reimbursement[] memory reimbursements;
         ctx = Context({
             executionEnvironment: _activeEnvironment(),
             userOpHash: bytes32(0),
@@ -106,7 +107,8 @@ contract MockGasAccounting is TestAtlas, BaseTest {
             solverOutcome: 0,
             bidFind: false,
             isSimulation: false,
-            callDepth: 0
+            callDepth: 0,
+            reimbursements: reimbursements
         });
     }
 

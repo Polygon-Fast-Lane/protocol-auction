@@ -19,6 +19,8 @@ import "src/contracts/types/UserOperation.sol";
 import "src/contracts/types/EscrowTypes.sol";
 import "src/contracts/types/LockTypes.sol";
 
+import "forge-std/Test.sol";
+
 /// @title Escrow
 /// @author FastLane Labs
 /// @notice This Escrow component of Atlas handles execution of stages by calling corresponding functions on the
@@ -55,11 +57,34 @@ abstract contract Escrow is AtlETH {
         withLockPhase(ExecutionPhase.PreOps)
         returns (bytes memory)
     {
+        uint256 gasBefore = gasleft();
+
         (bool _success, bytes memory _data) = ctx.executionEnvironment.call(
             abi.encodePacked(
                 abi.encodeCall(IExecutionEnvironment.preOpsWrapper, userOp), ctx.setAndPack(ExecutionPhase.PreOps)
             )
         );
+
+        uint256 gasUsed = gasBefore - gasleft();
+        
+        Reimbursement memory newReimbursement = Reimbursement({
+            gasUsed: gasUsed,
+            reimburser: 0x1234567890123456789012345678901234567890
+        });
+
+        // Create a new memory array with an additional slot
+        Reimbursement[] memory updatedReimbursements = new Reimbursement[](ctx.reimbursements.length + 1);
+
+        // Copy existing elements
+        for (uint i = 0; i < ctx.reimbursements.length; i++) {
+            updatedReimbursements[i] = ctx.reimbursements[i];
+        }
+        
+        // Add the new reimbursement at the end
+        updatedReimbursements[ctx.reimbursements.length] = newReimbursement;
+
+        // Update the context with the new array
+        ctx.reimbursements = updatedReimbursements;
 
         if (_success) {
             if (dConfig.callConfig.needsPreOpsReturnData()) {
@@ -70,7 +95,8 @@ abstract contract Escrow is AtlETH {
         }
 
         if (ctx.isSimulation) revert PreOpsSimFail();
-        revert PreOpsFail();
+        // revert PreOpsFail();
+        return new bytes(0);
     }
 
     /// @notice Executes the user operation logic defined in the Execution Environment.

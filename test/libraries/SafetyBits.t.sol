@@ -36,6 +36,7 @@ contract SafetyBitsTest is Test {
         pure
         returns (Context memory)
     {   
+        Reimbursement[] memory reimbursements;
         return Context({
             executionEnvironment: executionEnvironment,
             userOpHash: userOpHash,
@@ -48,7 +49,8 @@ contract SafetyBitsTest is Test {
             solverOutcome: 0,
             bidFind: false,
             isSimulation: isSimulation,
-            callDepth: 0
+            callDepth: 0,
+            reimbursements: reimbursements
         });
     }
 

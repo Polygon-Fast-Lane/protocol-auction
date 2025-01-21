@@ -14,6 +14,12 @@ struct Context {
     bool bidFind;
     bool isSimulation;
     address bundler;
+    Reimbursement[] reimbursements; // array of reimbursements
+}
+
+struct Reimbursement {
+    uint256 gasUsed;
+    address reimburser;
 }
 
 enum ExecutionPhase {
