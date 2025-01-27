@@ -11,6 +11,7 @@ import { AtlasEvents } from "src/contracts/types/AtlasEvents.sol";
 import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
 import { CallBits } from "src/contracts/libraries/CallBits.sol";
 import { EscrowBits } from "src/contracts/libraries/EscrowBits.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 
 import { DummyDAppControl } from "./base/DummyDAppControl.sol";
 import { BaseTest } from "./base/BaseTest.t.sol";
@@ -65,7 +66,7 @@ contract EscrowTest is BaseTest {
             .withGas(1_000_000)
             .withMaxFeePerGas(tx.gasprice + 1)
             .withNonce(address(atlasVerification), userEOA)
-            .withDeadline(block.number + 2)
+            .withDeadline(SafeBlockNumber.get() + 2)
             .withDapp(_control)
             .withControl(_control)
             .withCallConfig(IDAppControl(_control).CALL_CONFIG())

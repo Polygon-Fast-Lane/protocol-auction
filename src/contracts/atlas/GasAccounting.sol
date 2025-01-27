@@ -4,6 +4,7 @@ pragma solidity 0.8.25;
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { SafeCast } from "openzeppelin-contracts/contracts/utils/math/SafeCast.sol";
 import { SafetyLocks } from "src/contracts/atlas/SafetyLocks.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import { EscrowBits } from "src/contracts/libraries/EscrowBits.sol";
 import { AccountingMath } from "src/contracts/libraries/AccountingMath.sol";
 import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
@@ -224,7 +225,7 @@ abstract contract GasAccounting is SafetyLocks {
 
         // Update analytics (auctionWins, auctionFails, totalGasValueUsed) and lastAccessedBlock
         _updateAnalytics(_aData, solverWon && deficit == 0, gasValueUsed);
-        _aData.lastAccessedBlock = uint32(block.number);
+        _aData.lastAccessedBlock = uint32(SafeBlockNumber.get());
 
         // Persist changes in the _aData memory struct back to storage
         S_accessData[owner] = _aData;
@@ -242,7 +243,7 @@ abstract contract GasAccounting is SafetyLocks {
 
         EscrowAccountAccessData memory _aData = S_accessData[owner];
 
-        _aData.lastAccessedBlock = uint32(block.number);
+        _aData.lastAccessedBlock = uint32(SafeBlockNumber.get());
         _aData.bonded += _amt;
 
         S_bondedTotalSupply += amount;

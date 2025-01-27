@@ -13,6 +13,7 @@ import { UserOperationBuilder } from "test/base/builders/UserOperationBuilder.so
 import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
 import { UserOperation } from "src/contracts/types/UserOperation.sol";
 import { DAppConfig } from "src/contracts/types/ConfigTypes.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import "src/contracts/types/DAppOperation.sol";
 
 import { V2RewardDAppControl } from "src/contracts/examples/v2-example-router/V2RewardDAppControl.sol";
@@ -77,7 +78,7 @@ contract V2RewardDAppControlTest is BaseTest {
             to: address(v2RewardControl),
             maxFeePerGas: tx.gasprice + 1,
             value: 0,
-            deadline: block.number + 555, // block deadline
+            deadline: SafeBlockNumber.get() + 555, // block deadline
             data: userOpData
         });
 

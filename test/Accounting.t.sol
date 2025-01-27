@@ -13,6 +13,7 @@ import { DAppConfig } from "src/contracts/types/ConfigTypes.sol";
 import "src/contracts/types/DAppOperation.sol";
 
 import { SafetyBits } from "src/contracts/libraries/SafetyBits.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import "src/contracts/types/LockTypes.sol";
 
 import { TestUtils } from "./base/TestUtils.sol";
@@ -138,7 +139,7 @@ contract AccountingTest is BaseTest {
             to: address(swapIntentControl),
             maxFeePerGas: tx.gasprice + 1,
             value: 0,
-            deadline: block.number + 2,
+            deadline: SafeBlockNumber.get() + 2,
             data: userCallData
         });
         userOp.sessionKey = governanceEOA;
@@ -149,8 +150,7 @@ contract AccountingTest is BaseTest {
         // userOp.signature = abi.encodePacked(sig.r, sig.s, sig.v);
 
         // Build solver calldata (function selector on solver contract and its params)
-        bytes memory solverOpData =
-            abi.encodeCall(HonestRFQSolver.fulfillRFQ, (swapIntent, executionEnvironment));
+        bytes memory solverOpData = abi.encodeCall(HonestRFQSolver.fulfillRFQ, (swapIntent, executionEnvironment));
 
         vm.prank(solverOneEOA);
         atlas.bond(1 ether);

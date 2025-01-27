@@ -7,6 +7,7 @@ import { Storage } from "src/contracts/atlas/Storage.sol";
 import "src/contracts/types/LockTypes.sol";
 
 import { BaseTest } from "test/base/BaseTest.t.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 
 contract StorageTest is BaseTest {
     using stdStorage for StdStorage;
@@ -89,7 +90,7 @@ contract StorageTest is BaseTest {
         (bonded, lastAccessedBlock, auctionWins, auctionFails, totalGasValueUsed) = atlas.accessData(userEOA);
 
         assertEq(bonded, 0, "user bonded should be 0 again");
-        assertEq(lastAccessedBlock, block.number, "user lastAccessedBlock should be equal to block.number");
+        assertEq(lastAccessedBlock, SafeBlockNumber.get(), "user lastAccessedBlock should be equal to SafeBlockNumber.get()");
         assertEq(auctionWins, 0, "user auctionWins should still be 0");
         assertEq(auctionFails, 0, "user auctionFails should still be 0");
         assertEq(totalGasValueUsed, 0, "user totalGasValueUsed should still be 0");

@@ -4,6 +4,7 @@ pragma solidity 0.8.25;
 import "forge-std/Test.sol";
 
 import { BaseTest } from "./base/BaseTest.t.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import {AtlasEvents} from "src/contracts/types/AtlasEvents.sol";
 import {AtlasErrors} from "src/contracts/types/AtlasErrors.sol";
 
@@ -74,7 +75,7 @@ contract AtlETHTest is BaseTest {
         vm.stopPrank();
 
         assertEq(atlas.balanceOfUnbonding(solverTwoEOA), 1e18, "unbonding atleth should be 1 ETH");
-        vm.roll(block.number + atlas.ESCROW_DURATION() + 1);
+        vm.roll(SafeBlockNumber.get() + atlas.ESCROW_DURATION() + 1);
         assertEq(atlas.balanceOfUnbonding(solverTwoEOA), 1e18, "unbonding atleth should still be 1 ETH");
         solverEthBalanceBefore = address(solverTwoEOA).balance;
 
@@ -149,14 +150,14 @@ contract AtlETHTest is BaseTest {
         atlas.unbond(2e18);
 
         vm.expectEmit(true, true, false, true);
-        emit AtlasEvents.Unbond(solverOneEOA, 1e18, block.number + atlas.ESCROW_DURATION() + 1);
+        emit AtlasEvents.Unbond(solverOneEOA, 1e18, SafeBlockNumber.get() + atlas.ESCROW_DURATION() + 1);
         atlas.unbond(1e18);
 
         // NOTE: On unbonding, individual account bonded balances decrease, but total bonded supply remains the same
         assertEq(atlas.balanceOf(solverOneEOA), 0, "solverOne's atlETH balance should be 0");
         assertEq(atlas.balanceOfBonded(solverOneEOA), 0, "solverOne's bonded atlETH should be 1 ETH");
         assertEq(atlas.balanceOfUnbonding(solverOneEOA), 1e18, "solverOne's unbonding atlETH should be 1 ETH");
-        assertEq(atlas.accountLastActiveBlock(solverOneEOA), block.number, "solverOne's last active block should be the current block");
+        assertEq(atlas.accountLastActiveBlock(solverOneEOA), SafeBlockNumber.get(), "solverOne's last active block should be the current block");
         assertEq(atlas.bondedTotalSupply(), 1e18, "total bonded atlETH supply should be 1e18");
     }
 
@@ -180,7 +181,7 @@ contract AtlETHTest is BaseTest {
         vm.expectRevert(AtlasErrors.EscrowLockActive.selector);
         atlas.redeem(1e18);
 
-        vm.roll(block.number + atlas.ESCROW_DURATION() + 1);
+        vm.roll(SafeBlockNumber.get() + atlas.ESCROW_DURATION() + 1);
 
         vm.expectEmit(true, true, false, true);
         emit AtlasEvents.Redeem(solverOneEOA, 1e18);
@@ -236,7 +237,7 @@ contract AtlETHTest is BaseTest {
         atlas.unbond(1e18);
         vm.stopPrank();
 
-        assertEq(atlas.accountLastActiveBlock(solverOneEOA), block.number, "solverOne's last active block should be the current block");
+        assertEq(atlas.accountLastActiveBlock(solverOneEOA), SafeBlockNumber.get(), "solverOne's last active block should be the current block");
     }
 
     function test_atleth_unbondingCompleteBlock() public {
@@ -247,6 +248,6 @@ contract AtlETHTest is BaseTest {
         atlas.unbond(1e18);
         vm.stopPrank();
 
-        assertEq(atlas.unbondingCompleteBlock(solverOneEOA), block.number + atlas.ESCROW_DURATION(), "solverOne's unbonding complete block should be the current block + 64");
+        assertEq(atlas.unbondingCompleteBlock(solverOneEOA), SafeBlockNumber.get() + atlas.ESCROW_DURATION(), "solverOne's unbonding complete block should be the current block + 64");
     }
 }

@@ -8,6 +8,7 @@ import { DummyDAppControlBuilder } from "./helpers/DummyDAppControlBuilder.sol";
 import { CallConfigBuilder } from "./helpers/CallConfigBuilder.sol";
 import { UserOperationBuilder } from "./base/builders/UserOperationBuilder.sol";
 import { SolverOperationBuilder } from "./base/builders/SolverOperationBuilder.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 
 import "src/contracts/types/UserOperation.sol";
 import "src/contracts/types/SolverOperation.sol";
@@ -53,7 +54,7 @@ contract SorterTest is BaseTest {
             .withGas(1_000_000)
             .withMaxFeePerGas(tx.gasprice + 1)
             .withNonce(address(atlasVerification), userEOA)
-            .withDeadline(block.number + 2)
+            .withDeadline(SafeBlockNumber.get() + 2)
             .withDapp(address(dAppControl))
             .withControl(address(dAppControl))
             .withSessionKey(address(0))

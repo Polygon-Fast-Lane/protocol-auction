@@ -13,6 +13,7 @@ import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
 import { ValidCallsResult } from "src/contracts/types/ValidCalls.sol";
 import { SolverOutcome } from "src/contracts/types/EscrowTypes.sol";
 import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 
 import { BaseTest } from "./base/BaseTest.t.sol";
 import { UserOperationBuilder } from "./base/builders/UserOperationBuilder.sol";
@@ -279,7 +280,7 @@ contract SimulatorTest is BaseTest {
             .withGas(1_000_000)
             .withMaxFeePerGas(tx.gasprice + 1)
             .withNonce(address(atlasVerification), userEOA)
-            .withDeadline(block.number + 2)
+            .withDeadline(SafeBlockNumber.get() + 2)
             .withControl(address(dAppControl))
             .withSessionKey(address(0))
             .withData("")

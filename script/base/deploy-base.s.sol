@@ -59,8 +59,10 @@ contract DeployBaseScript is Script {
             return "OP SEPOLIA";
         } else if (chainId == 42_161) {
             return "ARBITRUM";
+        } else if (chainId == 42_170) {
+            return "ARBITRUM_NOVA";
         } else if (chainId == 421_614) {
-            return "ARBITRUM SEPOLIA";
+            return "ARBITRUM_SEPOLIA";
         } else if (chainId == 8453) {
             return "BASE";
         } else if (chainId == 84_532) {

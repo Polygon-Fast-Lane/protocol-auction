@@ -5,6 +5,7 @@ import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
 import { DeployBaseScript } from "script/base/deploy-base.s.sol";
+import { DeployGasCalculatorScript } from "script/deploy-gas-calculator.s.sol";
 
 import { Atlas } from "src/contracts/atlas/Atlas.sol";
 import { AtlasVerification } from "src/contracts/atlas/AtlasVerification.sol";
@@ -22,15 +23,25 @@ contract DeployAtlasScript is DeployBaseScript {
         uint256 deployerPrivateKey = vm.envUint("GOV_PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        // Computes the addresses at which AtlasVerification will be deployed
+        // Computes the addresses at which contracts will be deployed
         address expectedAtlasAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 1);
         address expectedAtlasVerificationAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 2);
         address expectedSimulatorAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 3);
+
+        // Deploy gas calculator for Arbitrum chains after other deployments
+        address l2GasCalculatorAddr = address(0);
+        uint256 chainId = block.chainid;
+
+        if (chainId == 42_161 || chainId == 42_170 || chainId == 421_614) {
+            // Deploy gas calculator for Arbitrum chains
+            l2GasCalculatorAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 4);
+        }
 
         address prevSimAddr = _getAddressFromDeploymentsJson("SIMULATOR");
         uint256 prevSimBalance = (prevSimAddr == address(0)) ? 0 : prevSimAddr.balance;
 
         console.log("Deployer address: \t\t", deployer);
+        console.log("Prev Simulator address: \t", prevSimAddr);
         console.log("Prev Simulator balance: \t", prevSimBalance);
 
         vm.startBroadcast(deployerPrivateKey);
@@ -42,8 +53,8 @@ contract DeployAtlasScript is DeployBaseScript {
             simulator: expectedSimulatorAddr,
             executionTemplate: address(execEnvTemplate),
             initialSurchargeRecipient: deployer,
-            l2GasCalculator: address(0)
-        });
+            l2GasCalculator: l2GasCalculatorAddr // is 0 if not on Arbitrum
+         });
         atlasVerification = new AtlasVerification(address(atlas));
 
         simulator = new Simulator();
@@ -55,6 +66,13 @@ contract DeployAtlasScript is DeployBaseScript {
         }
 
         sorter = new Sorter(address(atlas));
+
+        if (chainId == 42_161 || chainId == 42_170 || chainId == 421_614) {
+            // Deploy gas calculator for Arbitrum chains
+            console.log("Deploying L2 Gas Calculator at: ", l2GasCalculatorAddr);
+            DeployGasCalculatorScript gasCalculatorDeployer = new DeployGasCalculatorScript();
+            l2GasCalculatorAddr = gasCalculatorDeployer.deployL2GasCalculator();
+        }
 
         vm.stopBroadcast();
 
@@ -119,6 +137,9 @@ contract DeployAtlasScript is DeployBaseScript {
         _writeAddressToDeploymentsJson("ATLAS_VERIFICATION", address(atlasVerification));
         _writeAddressToDeploymentsJson("SIMULATOR", address(simulator));
         _writeAddressToDeploymentsJson("SORTER", address(sorter));
+        if (l2GasCalculatorAddr != address(0)) {
+            _writeAddressToDeploymentsJson("L2_GAS_CALCULATOR", l2GasCalculatorAddr);
+        }
 
         // Print the table header
         console.log("\n");
@@ -129,6 +150,9 @@ contract DeployAtlasScript is DeployBaseScript {
         console.log("| AtlasVerification     | ", address(atlasVerification), " |");
         console.log("| Simulator             | ", address(simulator), " |");
         console.log("| Sorter                | ", address(sorter), " |");
+        if (l2GasCalculatorAddr != address(0)) {
+            console.log("| L2 Gas Calculator     | ", l2GasCalculatorAddr, " |");
+        }
         console.log("------------------------------------------------------------------------");
         console.log("\n");
         console.log("You can find a list of contract addresses from the latest deployment in deployments.json");

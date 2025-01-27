@@ -86,3 +86,9 @@ Commit hash of deployment: [3416300](https://github.com/FastLane-Labs/atlas/comm
 | AtlasVerification  | [0xae631aCDC436b9Dfd75C5629F825330d91459445](https://bscscan.com/address/0xae631aCDC436b9Dfd75C5629F825330d91459445)          |
 | Simulator          | [0xAb665f032e6A20Ef7D43FfD4E92a2f4fd6d5771e](https://bscscan.com/address/0xAb665f032e6A20Ef7D43FfD4E92a2f4fd6d5771e)          |
 | Sorter             | [0xb47387995e866908B25b49e8BaC7e499170461A6](https://bscscan.com/address/0xb47387995e866908B25b49e8BaC7e499170461A6)          |
+
+# Deployment Instructions
+
+## Deploying the Gas Calculator (for Arbitrum chains only)
+
+Before deploying Atlas on Arbitrum chains, you need to deploy the Gas Calculator:

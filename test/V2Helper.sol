@@ -13,6 +13,7 @@ import "src/contracts/types/ConfigTypes.sol";
 import "src/contracts/types/EscrowTypes.sol";
 import "src/contracts/types/LockTypes.sol";
 import "src/contracts/types/ConfigTypes.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 
 import "forge-std/Test.sol";
 
@@ -66,7 +67,12 @@ contract V2Helper is Test, TxBuilder {
         console.log("-");
 
         return TxBuilder.buildUserOperation(
-            from, firstPool, maxFeePerGas, 0, block.number + 2, buildV2SwapCalldata(token0Balance, token1Balance, from)
+            from,
+            firstPool,
+            maxFeePerGas,
+            0,
+            SafeBlockNumber.get() + 2,
+            buildV2SwapCalldata(token0Balance, token1Balance, from)
         );
     }
 

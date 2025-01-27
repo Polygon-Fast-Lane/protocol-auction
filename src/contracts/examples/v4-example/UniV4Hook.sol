@@ -10,6 +10,7 @@ import { V4DAppControl } from "./V4DAppControl.sol";
 
 import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
 import { SafetyBits } from "src/contracts/libraries/SafetyBits.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 
 import "src/contracts/types/SolverOperation.sol";
 import "src/contracts/types/UserOperation.sol";
@@ -103,7 +104,7 @@ contract UniV4Hook is V4DAppControl {
                 abi.encodePacked(
                     IPoolManager.Currency.unwrap(key.currency0),
                     IPoolManager.Currency.unwrap(key.currency1),
-                    block.number
+                    SafeBlockNumber.get()
                 )
             );
 

@@ -12,6 +12,7 @@ import { SafeCall } from "src/contracts/libraries/SafeCall/SafeCall.sol";
 import { EscrowBits } from "src/contracts/libraries/EscrowBits.sol";
 import { CallBits } from "src/contracts/libraries/CallBits.sol";
 import { SafetyBits } from "src/contracts/libraries/SafetyBits.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import { AccountingMath } from "src/contracts/libraries/AccountingMath.sol";
 import { DAppConfig } from "src/contracts/types/ConfigTypes.sol";
 import "src/contracts/types/SolverOperation.sol";
@@ -343,7 +344,8 @@ abstract contract Escrow is AtlETH {
         view
         returns (uint256 result)
     {
-        if (solverOp.deadline != 0 && block.number > solverOp.deadline) {
+        uint256 currentBlockNumber = SafeBlockNumber.get();
+        if (solverOp.deadline != 0 && currentBlockNumber > solverOp.deadline) {
             result |= (
                 1
                     << uint256(
@@ -357,7 +359,7 @@ abstract contract Escrow is AtlETH {
 
         uint256 lastAccessedBlock = S_accessData[solverOp.from].lastAccessedBlock;
 
-        if (lastAccessedBlock >= block.number) {
+        if (lastAccessedBlock >= currentBlockNumber) {
             result |= 1 << uint256(SolverOutcome.PerBlockLimit);
         }
     }

@@ -9,3 +9,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
+[submodule "lib/nitro-contracts"]
+	path = lib/nitro-contracts
+	url = https://github.com/offchainlabs/nitro-contracts

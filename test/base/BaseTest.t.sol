@@ -54,7 +54,16 @@ contract BaseTest is Test {
     uint256 MAINNET_FORK_BLOCK = 17_441_786;
 
     function setUp() public virtual {
-        vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), MAINNET_FORK_BLOCK);
+        setUpChain("MAINNET_RPC_URL", MAINNET_FORK_BLOCK);
+    }
+
+    function setUpChain(string memory rpcEnvVar, uint256 forkBlock) public virtual {
+        if (forkBlock == 0) forkBlock = MAINNET_FORK_BLOCK;
+        if (bytes(rpcEnvVar).length == 0) rpcEnvVar = "MAINNET_RPC_URL";
+        console.log("RPC URL:", vm.envString(rpcEnvVar));
+        console.log("Fork block:", forkBlock);
+
+        vm.createSelectFork(vm.envString(rpcEnvVar), forkBlock);
         __createAndLabelAccounts();
         __deployAtlasContracts();
         __fundSolversAndDepositAtlETH();

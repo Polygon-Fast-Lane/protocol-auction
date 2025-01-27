@@ -11,6 +11,7 @@ import { AtlasErrors } from "src/contracts/types/AtlasErrors.sol";
 import { AtlasConstants } from "src/contracts/types/AtlasConstants.sol";
 
 import { EscrowBits } from "src/contracts/libraries/EscrowBits.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import { IL2GasCalculator } from "src/contracts/interfaces/IL2GasCalculator.sol";
 
 import "src/contracts/libraries/AccountingMath.sol";
@@ -795,7 +796,7 @@ contract GasAccountingTest is AtlasConstants, BaseTest {
         assertEq(deficit, 0, "Deficit should be 0");
 
         (, uint32 lastAccessedBlock,,,) = mockGasAccounting.accessData(solverOp.from);
-        assertEq(lastAccessedBlock, uint32(block.number));
+        assertEq(lastAccessedBlock, uint32(SafeBlockNumber.get()));
 
         uint256 bondedTotalSupplyAfter = mockGasAccounting.bondedTotalSupply();
         uint256 depositsAfter = mockGasAccounting.getDeposits();
@@ -822,7 +823,7 @@ contract GasAccountingTest is AtlasConstants, BaseTest {
 
         // Retrieve and check the updated access data
         (, uint32 lastAccessedBlock,,,) = mockGasAccounting.accessData(solverOp.from);
-        assertEq(lastAccessedBlock, uint32(block.number), "Last accessed block should be current block");
+        assertEq(lastAccessedBlock, uint32(SafeBlockNumber.get()), "Last accessed block should be current block");
 
         // Check the updated bonded total supply and deposits
         assertEq(
@@ -852,7 +853,7 @@ contract GasAccountingTest is AtlasConstants, BaseTest {
         uint256 deficit = mockGasAccounting.assign(solverOp.from, assignedAmount, assignedAmount, true);
         assertEq(deficit, assignedAmount - (unbondingAmount + bondedAmount));
         (, uint32 lastAccessedBlock,,,) = mockGasAccounting.accessData(solverOp.from);
-        assertEq(lastAccessedBlock, uint32(block.number));
+        assertEq(lastAccessedBlock, uint32(SafeBlockNumber.get()));
         assertEq(mockGasAccounting.bondedTotalSupply(), bondedTotalSupplyBefore - (unbondingAmount + bondedAmount));
         assertEq(mockGasAccounting.getDeposits(), depositsBefore + (unbondingAmount + bondedAmount));
         (uint112 bonded, uint112 unbonding) = mockGasAccounting._balanceOf(solverOp.from);
@@ -944,7 +945,7 @@ contract GasAccountingTest is AtlasConstants, BaseTest {
         (, lastAccessedBlock,,,) = mockGasAccounting.accessData(solverOp.from);
         (uint112 bondedAfter,,,,) = mockGasAccounting.accessData(solverOp.from);
 
-        assertEq(lastAccessedBlock, uint32(block.number));
+        assertEq(lastAccessedBlock, uint32(SafeBlockNumber.get()));
         assertEq(mockGasAccounting.bondedTotalSupply(), bondedTotalSupplyBefore + creditedAmount);
         assertEq(bondedAfter, bondedBefore + uint112(creditedAmount));
         assertEq(mockGasAccounting.getWithdrawals(), withdrawalsBefore + creditedAmount);

@@ -8,6 +8,7 @@ import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol"
 // Atlas Base Imports
 import { IAtlas } from "src/contracts/interfaces/IAtlas.sol";
 import { SafetyBits } from "src/contracts/libraries/SafetyBits.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 
 import { CallConfig } from "src/contracts/types/ConfigTypes.sol";
 import "src/contracts/types/SolverOperation.sol";
@@ -39,7 +40,7 @@ contract V4DAppControl is DAppControl {
 
     // Map to track when "Non Adversarial" flow is allowed.
     // NOTE: This hook is meant to be used for multiple pairs
-    // key: keccak(token0, token1, block.number)
+    // key: keccak(token0, token1, SafeBlockNumber.get())
     mapping(bytes32 => bool) public sequenceLock;
 
     uint256 transient_slot_initialized = uint256(keccak256("V4DAppControl.initialized"));
@@ -176,7 +177,9 @@ contract V4DAppControl is DAppControl {
         // Flag the pool to be open for trading for the remainder of the block
         bytes32 sequenceKey = keccak256(
             abi.encodePacked(
-                IPoolManager.Currency.unwrap(key.currency0), IPoolManager.Currency.unwrap(key.currency1), block.number
+                IPoolManager.Currency.unwrap(key.currency0),
+                IPoolManager.Currency.unwrap(key.currency1),
+                SafeBlockNumber.get()
             )
         );
 

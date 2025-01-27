@@ -3,6 +3,7 @@ pragma solidity 0.8.25;
 
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { SafeCast } from "openzeppelin-contracts/contracts/utils/math/SafeCast.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import { Permit69 } from "src/contracts/atlas/Permit69.sol";
 import "src/contracts/types/EscrowTypes.sol";
 
@@ -114,7 +115,7 @@ abstract contract AtlETH is Permit69 {
 
         if (_amt <= _balance) {
             s_aData.balance = _balance - _amt;
-        } else if (block.number > S_accessData[account].lastAccessedBlock + ESCROW_DURATION) {
+        } else if (SafeBlockNumber.get() > S_accessData[account].lastAccessedBlock + ESCROW_DURATION) {
             uint112 _shortfall = _amt - _balance;
             s_aData.balance = 0;
             s_aData.unbonding -= _shortfall; // underflow here to revert if insufficient balance
@@ -200,11 +201,11 @@ abstract contract AtlETH is Permit69 {
         EscrowAccountAccessData storage s_aData = S_accessData[owner];
 
         s_aData.bonded -= _amt;
-        s_aData.lastAccessedBlock = uint32(block.number);
+        s_aData.lastAccessedBlock = uint32(SafeBlockNumber.get());
 
         s_balanceOf[owner].unbonding += _amt;
 
-        emit Unbond(owner, amount, block.number + ESCROW_DURATION + 1);
+        emit Unbond(owner, amount, SafeBlockNumber.get() + ESCROW_DURATION + 1);
     }
 
     /// @notice Redeems the specified amount of AtlETH tokens for withdrawal.
@@ -215,7 +216,7 @@ abstract contract AtlETH is Permit69 {
     /// @param owner The address of the account redeeming AtlETH tokens for withdrawal.
     /// @param amount The amount of AtlETH tokens to redeem for withdrawal.
     function _redeem(address owner, uint256 amount) internal {
-        if (block.number <= uint256(S_accessData[owner].lastAccessedBlock) + ESCROW_DURATION) {
+        if (SafeBlockNumber.get() <= uint256(S_accessData[owner].lastAccessedBlock) + ESCROW_DURATION) {
             revert EscrowLockActive();
         }
 

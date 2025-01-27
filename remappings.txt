@@ -4,4 +4,4 @@ forge-std/=lib/forge-std/src/
 hardhat/=node_modules/hardhat/
 openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/
 openzeppelin-contracts/=lib/openzeppelin-contracts/
-solady/=lib/solady/src/
+nitro-contracts/=lib/nitro-contracts/

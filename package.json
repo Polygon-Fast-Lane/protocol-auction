@@ -18,6 +18,8 @@
       "deploy-atlas-amoy": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${AMOY_RPC_URL} --legacy --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify --delay 30",
       "deploy-atlas-polygon": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${POLYGON_RPC_URL} --legacy --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify --delay 30",
 
+      "deploy-atlas-arbitrum-sepolia": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${ARBITRUM_SEPOLIA_RPC_URL} --broadcast --etherscan-api-key ${ARBISCAN_API_KEY} --verify --delay 30",
+
       "deploy-fl-online-amoy": "source .env && forge script script/deploy-fl-online-control.s.sol:DeployFLOnlineControlScript --rpc-url ${AMOY_RPC_URL} --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify",
       "deploy-fl-online-polygon": "source .env && forge script script/deploy-fl-online-control.s.sol:DeployFLOnlineControlScript --rpc-url ${POLYGON_RPC_URL} --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify",
 

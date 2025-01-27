@@ -9,6 +9,7 @@ import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol"
 import { DAppControl } from "src/contracts/dapp/DAppControl.sol";
 import { DAppOperation } from "src/contracts/types/DAppOperation.sol";
 import { CallConfig } from "src/contracts/types/ConfigTypes.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import "src/contracts/types/UserOperation.sol";
 import "src/contracts/types/SolverOperation.sol";
 import "src/contracts/types/LockTypes.sol";
@@ -101,7 +102,7 @@ contract SolverGateway is OuterHelpers {
         // NOTE: Anyone can call this on behalf of the solver
         // NOTE: the solverOp deadline cannot be before the userOp deadline, therefore if the
         // solverOp deadline is passed then we know the userOp deadline is passed.
-        if (solverOp.deadline >= block.number) {
+        if (solverOp.deadline >= SafeBlockNumber.get()) {
             revert SolverGateway_RefundCongestionBuyIns_DeadlineNotPassed();
         }
 

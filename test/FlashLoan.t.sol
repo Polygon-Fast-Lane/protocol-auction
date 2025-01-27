@@ -11,6 +11,7 @@ import { ArbitrageTest } from "./base/ArbitrageTest.t.sol";
 import { SolverBase } from "src/contracts/solver/SolverBase.sol";
 import { DAppControl } from "src/contracts/dapp/DAppControl.sol";
 import { CallConfig } from "src/contracts/types/ConfigTypes.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import { SolverOutcome } from "src/contracts/types/EscrowTypes.sol";
 import { UserOperation } from "src/contracts/types/UserOperation.sol";
 import { SolverOperation } from "src/contracts/types/SolverOperation.sol";
@@ -65,7 +66,7 @@ contract FlashLoanTest is BaseTest {
             .withDapp(address(control))
             .withControl(address(control))
             .withCallConfig(control.CALL_CONFIG())
-            .withDeadline(block.number + 2)
+            .withDeadline(SafeBlockNumber.get() + 2)
             .withData(new bytes(0))
             .build();
 

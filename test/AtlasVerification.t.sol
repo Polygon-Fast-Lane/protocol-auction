@@ -15,6 +15,7 @@ import { BaseTest } from "./base/BaseTest.t.sol";
 import { CallVerification } from "src/contracts/libraries/CallVerification.sol";
 import { CallBits } from "src/contracts/libraries/CallBits.sol";
 import { SolverOutcome } from "src/contracts/types/EscrowTypes.sol";
+import { SafeBlockNumber } from "src/contracts/libraries/SafeBlockNumber.sol";
 import { DummyDAppControlBuilder } from "./helpers/DummyDAppControlBuilder.sol";
 import { CallConfigBuilder } from "./helpers/CallConfigBuilder.sol";
 import { UserOperationBuilder } from "./base/builders/UserOperationBuilder.sol";
@@ -82,7 +83,7 @@ contract AtlasVerificationBase is BaseTest {
             .withGas(1_000_000)
             .withMaxFeePerGas(tx.gasprice + 1)
             .withNonce(address(atlasVerification), userEOA)
-            .withDeadline(block.number + 2)
+            .withDeadline(SafeBlockNumber.get() + 2)
             .withControl(address(dAppControl))
             .withCallConfig(dAppControl.CALL_CONFIG())
             .withSessionKey(address(0))
