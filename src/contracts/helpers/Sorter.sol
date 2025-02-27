@@ -81,7 +81,7 @@ contract Sorter is AtlasConstants {
             AccountingMath.solverGasLimitScaledDown(solverOp.gas, dConfig.solverGasLimit) + _FASTLANE_GAS_BUFFER;
 
         uint256 calldataCost =
-            (solverOp.data.length + _SOLVER_OP_BASE_CALLDATA) * _CALLDATA_LENGTH_PREMIUM * solverOp.maxFeePerGas;
+            (solverOp.data.length + _SOLVER_OP_BASE_CALLDATA) * _CALLDATA_LENGTH_PREMIUM_HALVED * solverOp.maxFeePerGas;
         uint256 gasCost = (solverOp.maxFeePerGas * gasLimit) + calldataCost;
         if (solverBalance < gasCost) {
             return false;

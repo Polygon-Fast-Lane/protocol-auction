@@ -17,8 +17,6 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly-0d8302880b79fa9c3c4aa52ab446583dece19a34 # 2024-08-29 release
 
       - name: Check formatting
         run: forge fmt --check
@@ -35,8 +33,6 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly-0d8302880b79fa9c3c4aa52ab446583dece19a34 # 2024-08-29 release
 
       - name: Install dependencies
         run: forge install
@@ -80,8 +76,6 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly-0d8302880b79fa9c3c4aa52ab446583dece19a34 # 2024-08-29 release
 
       - name: Install dependencies
         run: forge install

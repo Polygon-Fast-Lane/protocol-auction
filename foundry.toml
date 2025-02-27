@@ -24,4 +24,7 @@
   quote_style = "double"
   tab_width = 4
   wrap_comments = true
-  ignore = ["./**/*.t.sol"]
+  ignore = ["./**/*.t.sol", "src/contracts/atlas/Storage.sol"]
+
+[etherscan]
+  berachain = { key = "${BERASCAN_API_KEY}", chain = 80094, url = "https://api.berascan.com/api" }

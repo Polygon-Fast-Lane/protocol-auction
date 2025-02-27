@@ -103,6 +103,9 @@ contract AtlasErrors {
     error NotInitialized();
     error AlreadyInitialized();
 
+    // Storage
+    error SurchargeRateTooHigh();
+
     // AtlasVerification
     error NoUnusedNonceInBitmap();
 

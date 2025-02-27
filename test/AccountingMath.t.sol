@@ -8,6 +8,7 @@ contract AccountingMathTest is Test {
     uint256 DEFAULT_ATLAS_SURCHARGE_RATE = 1_000_000; // 10%
     uint256 DEFAULT_BUNDLER_SURCHARGE_RATE = 1_000_000; // 10%
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testWithBundlerSurcharge() public {
         assertEq(AccountingMath.withSurcharge(0, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0));
         assertEq(AccountingMath.withSurcharge(1, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(1));
@@ -18,6 +19,7 @@ contract AccountingMathTest is Test {
         AccountingMath.withSurcharge(type(uint256).max, DEFAULT_BUNDLER_SURCHARGE_RATE);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testWithoutBundlerSurcharge() public {
         assertEq(AccountingMath.withoutSurcharge(0, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0));
         assertEq(AccountingMath.withoutSurcharge(1, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0));
@@ -28,6 +30,7 @@ contract AccountingMathTest is Test {
         AccountingMath.withoutSurcharge(type(uint256).max, DEFAULT_BUNDLER_SURCHARGE_RATE);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testWithAtlasAndBundlerSurcharges() public {
         assertEq(
             AccountingMath.withSurcharges(0, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE), uint256(0)
@@ -50,6 +53,7 @@ contract AccountingMathTest is Test {
         AccountingMath.withSurcharges(type(uint256).max, DEFAULT_ATLAS_SURCHARGE_RATE, DEFAULT_BUNDLER_SURCHARGE_RATE);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testGetAtlasSurcharge() public {
         assertEq(AccountingMath.getSurcharge(0, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(0));
         assertEq(AccountingMath.getSurcharge(10, DEFAULT_ATLAS_SURCHARGE_RATE), uint256(1));
@@ -62,6 +66,7 @@ contract AccountingMathTest is Test {
         AccountingMath.getSurcharge(type(uint256).max, DEFAULT_ATLAS_SURCHARGE_RATE);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testSolverGasLimitScaledDown() public {
         assertEq(AccountingMath.solverGasLimitScaledDown(0, 100), uint256(0));
         assertEq(AccountingMath.solverGasLimitScaledDown(50, 100), uint256(47)); // 50 * 10_000_000 / 10_500_000

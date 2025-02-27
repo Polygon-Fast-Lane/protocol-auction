@@ -142,8 +142,7 @@ contract V4DAppControl is DAppControl {
         } else {
             if (params.amountSpecified > 0) {
                 // Buying Pool's token0 with amountSpecified of User's token1
-            }
-            else {
+            } else {
                 // Buying amountSpecified of Pool's token0 with User's token1
             }
         }

@@ -67,7 +67,7 @@ contract Atlas is Escrow, Factory {
         returns (bool auctionWon)
     {
         uint256 _gasMarker = L2_GAS_CALCULATOR == address(0)
-            ? gasleft() + _BASE_TRANSACTION_GAS_USED + (msg.data.length * _CALLDATA_LENGTH_PREMIUM)
+            ? gasleft() + _BASE_TRANSACTION_GAS_USED + (msg.data.length * _CALLDATA_LENGTH_PREMIUM_HALVED)
             : gasleft() + IL2GasCalculator(L2_GAS_CALCULATOR).initialGasUsed(msg.data.length);
 
         bool _isSimulation = msg.sender == SIMULATOR;

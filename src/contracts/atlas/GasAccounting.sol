@@ -44,12 +44,13 @@ abstract contract GasAccounting is SafetyLocks {
     /// @param gasMarker The gas marker used to calculate the initial accounting values.
     function _initializeAccountingValues(uint256 gasMarker) internal {
         uint256 _rawClaims = (FIXED_GAS_OFFSET + gasMarker) * tx.gasprice;
+        (uint256 _atlasSurchargeRate, uint256 _bundlerSurchargeRate) = _surchargeRates();
 
         // Set any withdraws or deposits
-        t_claims = _rawClaims.withSurcharge(BUNDLER_SURCHARGE_RATE);
+        t_claims = _rawClaims.withSurcharge(_bundlerSurchargeRate);
 
         // Atlas surcharge is based on the raw claims value.
-        t_fees = _rawClaims.getSurcharge(ATLAS_SURCHARGE_RATE);
+        t_fees = _rawClaims.getSurcharge(_atlasSurchargeRate);
         t_deposits = msg.value;
 
         // Explicitly set other transient vars to 0 in case multiple metacalls in single tx.
@@ -103,7 +104,24 @@ abstract contract GasAccounting is SafetyLocks {
     }
 
     function _deficit() internal view returns (uint256) {
-        return t_claims + t_withdrawals + t_fees - t_writeoffs;
+        // _deficit() is compared against t_deposits which includes:
+        // + msg.value deposited
+        // + gas cost + A + B (prev solver fault fails)
+
+        // _deficit() is therefore composed of:
+        // + withdrawals = msg.value borrowed
+        // + claims = gas cost + B (full tx)
+        // + fees = A (full tx)
+        // - writeoffs = gas cost + A + B (prev bundler fault fails)
+
+        // Such that `deficit() - t_deposits` =
+        // + msg.value still owed
+        // + gas cost + A + B (full tx)
+        // - gas cost + A + B (prev solver fault fails)
+        // - gas cost + A + B (prev bundler fault fails)
+        // == only what the current solver owes if they win
+
+        return t_withdrawals + t_claims + t_fees - t_writeoffs;
     }
 
     /// @notice Allows a solver to settle any outstanding ETH owed, either to repay gas used by their solverOp or to
@@ -278,6 +296,7 @@ abstract contract GasAccounting is SafetyLocks {
         internal
     {
         uint256 _gasUsed = (gasWaterMark + _SOLVER_BASE_GAS_USED - gasleft()) * tx.gasprice;
+        (uint256 _atlasSurchargeRate, uint256 _bundlerSurchargeRate) = _surchargeRates();
 
         if (includeCalldata) {
             _gasUsed += _getCalldataCost(solverOp.data.length);
@@ -288,10 +307,10 @@ abstract contract GasAccounting is SafetyLocks {
         if (result.bundlersFault()) {
             // CASE: Solver is not responsible for the failure of their operation, so we blame the bundler
             // and reduce the total amount refunded to the bundler
-            t_writeoffs += _gasUsed.withSurcharges(ATLAS_SURCHARGE_RATE, BUNDLER_SURCHARGE_RATE);
+            t_writeoffs += _gasUsed.withSurcharges(_atlasSurchargeRate, _bundlerSurchargeRate);
         } else {
             // CASE: Solver failed, so we calculate what they owe.
-            uint256 _gasUsedWithSurcharges = _gasUsed.withSurcharges(ATLAS_SURCHARGE_RATE, BUNDLER_SURCHARGE_RATE);
+            uint256 _gasUsedWithSurcharges = _gasUsed.withSurcharges(_atlasSurchargeRate, _bundlerSurchargeRate);
             uint256 _surchargesOnly = _gasUsedWithSurcharges - _gasUsed;
 
             // In `_assign()`, the failing solver's bonded AtlETH balance is reduced by `_gasUsedWithSurcharges`. Any
@@ -309,13 +328,13 @@ abstract contract GasAccounting is SafetyLocks {
     }
 
     function _writeOffBidFindGasCost(uint256 gasUsed) internal {
-        t_writeoffs += gasUsed.withSurcharges(ATLAS_SURCHARGE_RATE, BUNDLER_SURCHARGE_RATE);
+        (uint256 _atlasSurchargeRate, uint256 _bundlerSurchargeRate) = _surchargeRates();
+        t_writeoffs += gasUsed.withSurcharges(_atlasSurchargeRate, _bundlerSurchargeRate);
     }
 
     /// @param ctx Context struct containing relevant context information for the Atlas auction.
     /// @param solverGasLimit The maximum gas limit for a solver, as set in the DAppConfig
     /// @return adjustedWithdrawals Withdrawals of the current metacall, adjusted by adding the Atlas gas surcharge.
-    /// @return adjustedDeposits Deposits of the current metacall, no adjustments applied.
     /// @return adjustedClaims Claims of the current metacall, adjusted by subtracting the unused gas scaled to include
     /// bundler surcharge.
     /// @return adjustedWriteoffs Writeoffs of the current metacall, adjusted by adding the bundler gas overage penalty
@@ -331,7 +350,6 @@ abstract contract GasAccounting is SafetyLocks {
         internal
         returns (
             uint256 adjustedWithdrawals,
-            uint256 adjustedDeposits,
             uint256 adjustedClaims,
             uint256 adjustedWriteoffs,
             uint256 netAtlasGasSurcharge
@@ -340,17 +358,17 @@ abstract contract GasAccounting is SafetyLocks {
         uint256 _surcharge = S_cumulativeSurcharge;
 
         adjustedWithdrawals = t_withdrawals;
-        adjustedDeposits = t_deposits;
         adjustedClaims = t_claims;
         adjustedWriteoffs = t_writeoffs;
         uint256 _fees = t_fees;
+        (uint256 _atlasSurchargeRate, uint256 _bundlerSurchargeRate) = _surchargeRates();
 
         uint256 _gasLeft = gasleft(); // Hold this constant for the calculations
 
         // Estimate the unspent, remaining gas that the Solver will not be liable for.
         uint256 _gasRemainder = _gasLeft * tx.gasprice;
 
-        adjustedClaims -= _gasRemainder.withSurcharge(BUNDLER_SURCHARGE_RATE);
+        adjustedClaims -= _gasRemainder.withSurcharge(_bundlerSurchargeRate);
 
         if (ctx.solverSuccessful) {
             // If a solver was successful, calc the full Atlas gas surcharge on the gas cost of the entire metacall, and
@@ -358,7 +376,7 @@ abstract contract GasAccounting is SafetyLocks {
             // be offset by any gas surcharge paid by failed solvers, which would have been added to deposits or
             // writeoffs in _handleSolverAccounting(). As such, the winning solver does not pay for surcharge on the gas
             // used by other solvers.
-            netAtlasGasSurcharge = _fees - _gasRemainder.getSurcharge(ATLAS_SURCHARGE_RATE);
+            netAtlasGasSurcharge = _fees - _gasRemainder.getSurcharge(_atlasSurchargeRate);
             adjustedWithdrawals += netAtlasGasSurcharge;
             S_cumulativeSurcharge = _surcharge + netAtlasGasSurcharge;
         } else {
@@ -366,14 +384,14 @@ abstract contract GasAccounting is SafetyLocks {
             uint256 _solverSurcharge = t_solverSurcharge;
             if (_solverSurcharge > 0) {
                 netAtlasGasSurcharge = _solverSurcharge.getPortionFromTotalSurcharge({
-                    targetSurchargeRate: ATLAS_SURCHARGE_RATE,
-                    totalSurchargeRate: ATLAS_SURCHARGE_RATE + BUNDLER_SURCHARGE_RATE
+                    targetSurchargeRate: _atlasSurchargeRate,
+                    totalSurchargeRate: _atlasSurchargeRate + _bundlerSurchargeRate
                 });
 
                 // When no winning solvers, bundler max refund is 80% of metacall gas cost. The remaining 20% can be
                 // collected through storage refunds. Any excess bundler surcharge is instead taken as Atlas surcharge.
                 uint256 _bundlerSurcharge = _solverSurcharge - netAtlasGasSurcharge;
-                uint256 _maxBundlerRefund = adjustedClaims.withoutSurcharge(BUNDLER_SURCHARGE_RATE).maxBundlerRefund();
+                uint256 _maxBundlerRefund = adjustedClaims.withoutSurcharge(_bundlerSurchargeRate).maxBundlerRefund();
                 if (_bundlerSurcharge > _maxBundlerRefund) {
                     netAtlasGasSurcharge += _bundlerSurcharge - _maxBundlerRefund;
                 }
@@ -381,14 +399,14 @@ abstract contract GasAccounting is SafetyLocks {
                 adjustedWithdrawals += netAtlasGasSurcharge;
                 S_cumulativeSurcharge = _surcharge + netAtlasGasSurcharge;
             }
-            return (adjustedWithdrawals, adjustedDeposits, adjustedClaims, adjustedWriteoffs, netAtlasGasSurcharge);
+            return (adjustedWithdrawals, adjustedClaims, adjustedWriteoffs, netAtlasGasSurcharge);
         }
 
         // Calculate whether or not the bundler used an excessive amount of gas and, if so, reduce their
         // gas rebate. By reducing the claims, solvers end up paying less in total.
         if (ctx.solverCount > 0) {
             // Calculate the unadjusted bundler gas surcharge
-            uint256 _grossBundlerGasSurcharge = adjustedClaims.withoutSurcharge(BUNDLER_SURCHARGE_RATE);
+            uint256 _grossBundlerGasSurcharge = adjustedClaims.withoutSurcharge(_bundlerSurchargeRate);
 
             // Calculate an estimate for how much gas should be remaining
             // NOTE: There is a free buffer of one SolverOperation because solverIndex starts at 0.
@@ -435,10 +453,9 @@ abstract contract GasAccounting is SafetyLocks {
         uint256 _claims;
         uint256 _writeoffs;
         uint256 _withdrawals;
-        uint256 _deposits;
+        uint256 _deposits = t_deposits; // load here, not used in adjustment function below
 
-        (_withdrawals, _deposits, _claims, _writeoffs, netAtlasGasSurcharge) =
-            _adjustAccountingForFees(ctx, solverGasLimit);
+        (_withdrawals, _claims, _writeoffs, netAtlasGasSurcharge) = _adjustAccountingForFees(ctx, solverGasLimit);
 
         uint256 _amountSolverPays;
         uint256 _amountSolverReceives;
@@ -521,7 +538,7 @@ abstract contract GasAccounting is SafetyLocks {
         if (L2_GAS_CALCULATOR == address(0)) {
             // Default to using mainnet gas calculations
             // _SOLVER_OP_BASE_CALLDATA = SolverOperation calldata length excluding solverOp.data
-            calldataCost = (calldataLength + _SOLVER_OP_BASE_CALLDATA) * _CALLDATA_LENGTH_PREMIUM * tx.gasprice;
+            calldataCost = (calldataLength + _SOLVER_OP_BASE_CALLDATA) * _CALLDATA_LENGTH_PREMIUM_HALVED * tx.gasprice;
         } else {
             calldataCost =
                 IL2GasCalculator(L2_GAS_CALCULATOR).getCalldataCost(calldataLength + _SOLVER_OP_BASE_CALLDATA);

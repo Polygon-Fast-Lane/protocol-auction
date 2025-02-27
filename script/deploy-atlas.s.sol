@@ -34,11 +34,14 @@ contract DeployAtlasScript is DeployBaseScript {
         address expectedAtlasVerificationAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 3);
         address expectedSimulatorAddr = vm.computeCreateAddress(deployer, vm.getNonce(deployer) + 4);
 
+        address prevAtlasAddr = _getAddressFromDeploymentsJson("ATLAS");
+        uint256 prevSurcharge = (prevAtlasAddr == address(0)) ? 0 : Atlas(payable(prevAtlasAddr)).cumulativeSurcharge();
         address prevSimAddr = _getAddressFromDeploymentsJson("SIMULATOR");
         uint256 prevSimBalance = (prevSimAddr == address(0)) ? 0 : prevSimAddr.balance;
 
         console.log("Deployer address: \t\t", deployer);
         console.log("Prev Simulator balance: \t", prevSimBalance);
+        console.log("Prev Atlas Gas Surcharge: \t", prevSurcharge);
 
         vm.startBroadcast(deployerPrivateKey);
 
@@ -58,6 +61,11 @@ contract DeployAtlasScript is DeployBaseScript {
 
         simulator = new Simulator();
         simulator.setAtlas(address(atlas));
+
+        // If prev Atlas deployment has surcharge, withdraw it
+        if (prevAtlasAddr != address(0) && prevSurcharge > 0) {
+            Atlas(payable(prevAtlasAddr)).withdrawSurcharge();
+        }
 
         // If prev Simulator deployment has native assets, withdraw them to new Simulator
         if (prevSimBalance > 0) {

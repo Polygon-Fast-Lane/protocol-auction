@@ -52,7 +52,7 @@ contract FastLaneOnlineTest is BaseTest {
     }
 
     // Only Atlas surcharge kept if all fail, bundler surcharge paid to bundler
-    uint256 constant SURCHARGE_PER_SOLVER_IF_ALL_FAIL = 14_000e9; // 14k Gwei (avg, differs for ERC20/native in/out)
+    uint256 constant SURCHARGE_PER_SOLVER_IF_ALL_FAIL = 12_000e9; // 12k Gwei (avg, differs for ERC20/native in/out)
     uint256 constant ERR_MARGIN = 0.22e18; // 22% error margin
     address internal constant NATIVE_TOKEN = address(0);
 
@@ -1302,7 +1302,7 @@ contract FastLaneOnlineTest is BaseTest {
 
         // Calculate estimated Atlas gas surcharge taken from call above
         txGasUsed = estAtlasGasSurcharge - gasleft();
-        estAtlasGasSurcharge = txGasUsed * defaultGasPrice * atlas.ATLAS_SURCHARGE_RATE() / atlas.SCALE();
+        estAtlasGasSurcharge = txGasUsed * defaultGasPrice * atlas.atlasSurchargeRate() / atlas.SCALE();
 
         assertTrue(
             result == swapCallShouldSucceed,

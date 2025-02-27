@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 import { Storage } from "../src/contracts/atlas/Storage.sol";
 import "../src/contracts/types/LockTypes.sol";
+import { AtlasErrors } from "../src/contracts/types/AtlasErrors.sol";
 
 import { BaseTest } from "./base/BaseTest.t.sol";
 
@@ -12,7 +13,7 @@ contract StorageTest is BaseTest {
     using stdStorage for StdStorage;
 
     uint256 constant DEFAULT_SCALE = 10_000_000; // out of 10_000_000 = 100%
-    uint256 constant DEFAULT_FIXED_GAS_OFFSET = 85_000;
+    uint256 constant DEFAULT_FIXED_GAS_OFFSET = 120_000;
 
     function setUp() public override {
         super.setUp();
@@ -29,10 +30,6 @@ contract StorageTest is BaseTest {
         assertEq(atlas.symbol(), "atlETH", "symbol set incorrectly");
         assertEq(atlas.decimals(), 18, "decimals set incorrectly");
 
-        assertEq(atlas.ATLAS_SURCHARGE_RATE(), DEFAULT_ATLAS_SURCHARGE_RATE, "ATLAS_SURCHARGE_RATE set incorrectly");
-        assertEq(
-            atlas.BUNDLER_SURCHARGE_RATE(), DEFAULT_BUNDLER_SURCHARGE_RATE, "BUNDLER_SURCHARGE_RATE set incorrectly"
-        );
         assertEq(atlas.SCALE(), DEFAULT_SCALE, "SCALE set incorrectly");
         assertEq(atlas.FIXED_GAS_OFFSET(), DEFAULT_FIXED_GAS_OFFSET, "FIXED_GAS_OFFSET set incorrectly");
     }
@@ -141,6 +138,43 @@ contract StorageTest is BaseTest {
         vm.prank(deployer);
         atlas.transferSurchargeRecipient(userEOA);
         assertEq(atlas.pendingSurchargeRecipient(), userEOA, "pendingSurchargeRecipient should be userEOA");
+    }
+
+    function test_storage_view_atlasSurchargeRate() public {
+        assertEq(atlas.atlasSurchargeRate(), DEFAULT_ATLAS_SURCHARGE_RATE, "atlasSurchargeRate set incorrectly");
+        vm.prank(deployer);
+        atlas.setSurchargeRates(100, 200);
+        assertEq(atlas.atlasSurchargeRate(), 100, "atlasSurchargeRate set incorrectly");
+    }
+
+    function test_storage_view_bundlerSurchargeRate() public {
+        assertEq(atlas.bundlerSurchargeRate(), DEFAULT_BUNDLER_SURCHARGE_RATE, "bundlerSurchargeRate set incorrectly");
+        vm.prank(deployer);
+        atlas.setSurchargeRates(100, 200);
+        assertEq(atlas.bundlerSurchargeRate(), 200, "bundlerSurchargeRate set incorrectly");
+    }
+
+    // Storage Setters
+
+    function test_storage_setSurchargeRates() public {
+        uint256 tooHigh = uint256(type(uint128).max) + 1;
+
+        vm.prank(deployer);
+        vm.expectRevert(AtlasErrors.SurchargeRateTooHigh.selector);
+        atlas.setSurchargeRates(tooHigh, 456);
+
+        vm.prank(deployer);
+        vm.expectRevert(AtlasErrors.SurchargeRateTooHigh.selector);
+        atlas.setSurchargeRates(123, tooHigh);
+
+        vm.prank(userEOA);
+        vm.expectRevert(AtlasErrors.InvalidAccess.selector);
+        atlas.setSurchargeRates(123, 456);
+
+        vm.prank(deployer);
+        atlas.setSurchargeRates(123, 456);
+        assertEq(atlas.atlasSurchargeRate(), 123, "atlasSurchargeRate set incorrectly");
+        assertEq(atlas.bundlerSurchargeRate(), 456, "bundlerSurchargeRate set incorrectly");
     }
 
     // Transient Storage Getters and Setters

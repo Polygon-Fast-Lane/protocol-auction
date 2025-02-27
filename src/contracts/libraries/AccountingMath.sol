@@ -5,7 +5,7 @@ library AccountingMath {
     uint256 internal constant _MAX_BUNDLER_REFUND_RATE = 8_000_000; // out of 10_000_000 = 80%
     uint256 internal constant _SOLVER_GAS_LIMIT_BUFFER_PERCENTAGE = 500_000; // out of 10_000_000 = 5%
     uint256 internal constant _SCALE = 10_000_000; // 10_000_000 / 10_000_000 = 100%
-    uint256 internal constant _FIXED_GAS_OFFSET = 85_000;
+    uint256 internal constant _FIXED_GAS_OFFSET = 120_000;
 
     function withSurcharge(uint256 amount, uint256 surchargeRate) internal pure returns (uint256 adjustedAmount) {
         adjustedAmount = amount * (_SCALE + surchargeRate) / _SCALE;

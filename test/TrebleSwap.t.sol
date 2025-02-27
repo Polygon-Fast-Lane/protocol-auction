@@ -299,7 +299,7 @@ contract TrebleSwapTest is BaseTest {
 
         // Estimate gas surcharge Atlas should have taken
         txGasUsed = estAtlasGasSurcharge - gasleft();
-        estAtlasGasSurcharge = txGasUsed * tx.gasprice * atlas.ATLAS_SURCHARGE_RATE() / atlas.SCALE();
+        estAtlasGasSurcharge = txGasUsed * tx.gasprice * atlas.atlasSurchargeRate() / atlas.SCALE();
 
         // For benchmarking
         console.log("Metacall gas cost: ", txGasUsed);

@@ -45,9 +45,11 @@ interface IAtlas {
     function depositAndBond(uint256 amountToBond) external payable;
     function unbond(uint256 amount) external;
     function redeem(uint256 amount) external;
+
     function withdrawSurcharge() external;
     function transferSurchargeRecipient(address newRecipient) external;
     function becomeSurchargeRecipient() external;
+    function setSurchargeRates(uint128 newAtlasRate, uint128 newBundlerRate) external;
 
     // Permit69.sol
     function transferUserERC20(
@@ -101,4 +103,6 @@ interface IAtlas {
     function cumulativeSurcharge() external view returns (uint256);
     function surchargeRecipient() external view returns (address);
     function pendingSurchargeRecipient() external view returns (address);
+    function atlasSurchargeRate() external view returns (uint256);
+    function bundlerSurchargeRate() external view returns (uint256);
 }

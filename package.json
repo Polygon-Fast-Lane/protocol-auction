@@ -1,6 +1,6 @@
 {
     "name": "atlas",
-    "version": "1.0.0",
+    "version": "1.3.0",
     "repository": "https://github.com/Polygon-Fast-Lane/atlas",
     "author": "FastLane",
     "scripts": {
@@ -17,19 +17,17 @@
 
       "deploy-atlas-amoy": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${AMOY_RPC_URL} --legacy --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify --delay 30",
       "deploy-atlas-polygon": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${POLYGON_RPC_URL} --legacy --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify --delay 30",
-
-      "deploy-fl-online-amoy": "source .env && forge script script/deploy-fl-online-control.s.sol:DeployFLOnlineControlScript --rpc-url ${AMOY_RPC_URL} --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify",
-      "deploy-fl-online-polygon": "source .env && forge script script/deploy-fl-online-control.s.sol:DeployFLOnlineControlScript --rpc-url ${POLYGON_RPC_URL} --broadcast --etherscan-api-key ${POLYGONSCAN_API_KEY} --verify",
       
       "deploy-atlas-bsc": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BSC_RPC_URL} --legacy --broadcast --etherscan-api-key ${BSCSCAN_API_KEY} --verify --delay 30",
       "deploy-atlas-bsc-testnet": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BSC_TESTNET_RPC_URL} --legacy --broadcast --etherscan-api-key ${BSCSCAN_API_KEY} --verify --delay 30",
 
+      "deploy-atlas-base": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BASE_RPC_URL} --legacy --broadcast --etherscan-api-key ${BASESCAN_API_KEY} --verify --delay 30",
       "deploy-atlas-base-sepolia": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BASE_SEPOLIA_RPC_URL} --legacy --broadcast --etherscan-api-key ${BASESCAN_API_KEY} --verify --delay 30",
       
+      "deploy-atlas-berachain": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BERACHAIN_RPC_URL} --legacy --broadcast --etherscan-api-key ${BERASCAN_API_KEY} --verify --verifier-url https://api.berascan.com/api --delay 5",
+
       "deploy-atlas-sepolia": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${SEPOLIA_RPC_URL} --legacy --gas-estimate-multiplier 150 --broadcast --etherscan-api-key ${ETHERSCAN_API_KEY} --verify --delay 30",
       "deploy-atlas-local": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --fork-url http://localhost:8545 --broadcast",
-
-      "deploy-atlas-base": "source .env && forge script script/deploy-atlas.s.sol:DeployAtlasScript --rpc-url ${BASE_RPC_URL} --legacy --broadcast --etherscan-api-key ${BASESCAN_API_KEY} --verify --delay 30",
       
       "deploy-swap-intent-sepolia": "source .env && forge script script/deploy-swap-intent-control.s.sol:DeploySwapIntentControlScript --rpc-url ${SEPOLIA_RPC_URL} --broadcast --etherscan-api-key ${ETHERSCAN_API_KEY} --verify",
       "deploy-swap-intent-local": "source .env && forge script script/deploy-swap-intent-control.s.sol:DeploySwapIntentControlScript --fork-url http://localhost:8545 --broadcast",

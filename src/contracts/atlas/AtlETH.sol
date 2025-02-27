@@ -251,9 +251,7 @@ abstract contract AtlETH is Permit69 {
     /// @dev This function can only be called by the current surcharge recipient.
     /// It transfers the accumulated surcharge amount to the surcharge recipient's address.
     function withdrawSurcharge() external {
-        if (msg.sender != S_surchargeRecipient) {
-            revert InvalidAccess();
-        }
+        _onlySurchargeRecipient();
 
         uint256 _paymentAmount = S_cumulativeSurcharge;
         S_cumulativeSurcharge = 0; // Clear before transfer to prevent reentrancy
@@ -268,10 +266,9 @@ abstract contract AtlETH is Permit69 {
     /// If the caller is not the current surcharge recipient, it reverts with an `InvalidAccess` error.
     /// @param newRecipient The address of the new surcharge recipient.
     function transferSurchargeRecipient(address newRecipient) external {
+        _onlySurchargeRecipient();
+
         address _surchargeRecipient = S_surchargeRecipient;
-        if (msg.sender != _surchargeRecipient) {
-            revert InvalidAccess();
-        }
 
         S_pendingSurchargeRecipient = newRecipient;
         emit SurchargeRecipientTransferStarted(_surchargeRecipient, newRecipient);
