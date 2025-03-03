@@ -62,7 +62,8 @@ contract V2ExPost is DAppControl {
                 trustedOpHash: false,
                 invertBidValue: false,
                 exPostBids: true,
-                allowAllocateValueFailure: false
+                allowAllocateValueFailure: false,
+                multipleSuccessfulSolvers: false
             })
         )
     { }

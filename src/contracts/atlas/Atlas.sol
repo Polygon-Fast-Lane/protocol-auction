@@ -311,11 +311,15 @@ contract Atlas is Escrow, Factory {
         for (; ctx.solverIndex < i; ctx.solverIndex++) {
             SolverOperation calldata solverOp = solverOps[ctx.solverIndex];
 
-            _bidAmount = _executeSolverOperation(ctx, dConfig, userOp, solverOp, solverOp.bidAmount, false, returnData);
+            _bidAmount += _executeSolverOperation(ctx, dConfig, userOp, solverOp, solverOp.bidAmount, false, returnData);
 
             if (ctx.solverSuccessful) {
                 return _bidAmount;
             }
+        }
+        if (dConfig.callConfig.multipleSuccessfulSolvers() && _bidAmount > 0) {
+            ctx.solverSuccessful = true;
+            return _bidAmount;
         }
         if (ctx.isSimulation) revert SolverSimFail(uint256(ctx.solverOutcome));
         if (dConfig.callConfig.needsFulfillment()) revert UserNotFulfilled();

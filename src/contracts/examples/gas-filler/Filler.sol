@@ -89,7 +89,8 @@ contract Filler is DAppControl {
                 trustedOpHash: false,
                 invertBidValue: true,
                 exPostBids: false,
-                allowAllocateValueFailure: false
+                allowAllocateValueFailure: false,
+                multipleSuccessfulSolvers: false
             })
         )
     { }

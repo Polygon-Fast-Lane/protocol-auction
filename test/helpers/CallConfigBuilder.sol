@@ -27,6 +27,7 @@ contract CallConfigBuilder is Test {
     bool invertBidValue;
     bool exPostBids;
     bool allowAllocateValueFailure;
+    bool multipleSuccessfulSolvers;
 
     function withUserNoncesSequential(bool _sequential) public returns (CallConfigBuilder) {
         userNoncesSequential = _sequential;
@@ -155,7 +156,8 @@ contract CallConfigBuilder is Test {
             trustedOpHash,
             invertBidValue,
             exPostBids,
-            allowAllocateValueFailure
+            allowAllocateValueFailure,
+            multipleSuccessfulSolvers
         );
     }
 }

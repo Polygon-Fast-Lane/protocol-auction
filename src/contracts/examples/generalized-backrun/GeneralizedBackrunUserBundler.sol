@@ -73,7 +73,8 @@ contract GeneralizedBackrunUserBundler is DAppControl {
                 trustedOpHash: true,
                 invertBidValue: false,
                 exPostBids: false,
-                allowAllocateValueFailure: true
+                allowAllocateValueFailure: true,
+                multipleSuccessfulSolvers: false
             })
         )
     { }

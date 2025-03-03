@@ -76,6 +76,9 @@ library CallBits {
         if (callConfig.allowAllocateValueFailure) {
             encodedCallConfig ^= _ONE << uint32(CallConfigIndex.AllowAllocateValueFailure);
         }
+        if (callConfig.multipleSuccessfulSolvers) {
+            encodedCallConfig ^= _ONE << uint32(CallConfigIndex.MultipleSuccessfulSolvers);
+        }
     }
 
     function decodeCallConfig(uint32 encodedCallConfig) internal pure returns (CallConfig memory callConfig) {
@@ -100,7 +103,8 @@ library CallBits {
             trustedOpHash: allowsTrustedOpHash(encodedCallConfig),
             invertBidValue: invertsBidValue(encodedCallConfig),
             exPostBids: exPostBids(encodedCallConfig),
-            allowAllocateValueFailure: allowAllocateValueFailure(encodedCallConfig)
+            allowAllocateValueFailure: allowAllocateValueFailure(encodedCallConfig),
+            multipleSuccessfulSolvers: multipleSuccessfulSolvers(encodedCallConfig)
         });
     }
 
@@ -186,5 +190,9 @@ library CallBits {
 
     function allowAllocateValueFailure(uint32 callConfig) internal pure returns (bool) {
         return callConfig & (1 << uint32(CallConfigIndex.AllowAllocateValueFailure)) != 0;
+    }
+
+    function multipleSuccessfulSolvers(uint32 callConfig) internal pure returns (bool) {
+        return (callConfig & (1 << uint32(CallConfigIndex.MultipleSuccessfulSolvers))) != 0;
     }
 }
