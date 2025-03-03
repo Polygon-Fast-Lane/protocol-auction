@@ -316,7 +316,12 @@ abstract contract GasAccounting is SafetyLocks {
             // In `_assign()`, the failing solver's bonded AtlETH balance is reduced by `_gasUsedWithSurcharges`. Any
             // deficit from that operation is added to `writeoffs` and returned as `_assignDeficit` below. The portion
             // that can be covered by the solver's AtlETH is added to `deposits`, to account that it has been paid.
-            uint256 _assignDeficit = _assign(solverOp.from, _gasUsedWithSurcharges, _gasUsedWithSurcharges, false);
+            uint256 _assignDeficit = _assign(
+                solverOp.from,
+                _gasUsedWithSurcharges,
+                _gasUsedWithSurcharges,
+                result == 1 << (uint256(SolverOutcome.MultipleSolvers))
+            );
 
             // We track the surcharges (in excess of deficit - so the actual AtlETH that can be collected) separately,
             // so that in the event of no successful solvers, any `_assign()`ed surcharges can be attributed to an

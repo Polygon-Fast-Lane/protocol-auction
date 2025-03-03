@@ -62,7 +62,8 @@ contract V2RewardDAppControl is DAppControl {
                 trustedOpHash: true,
                 invertBidValue: false,
                 exPostBids: true,
-                allowAllocateValueFailure: false
+                allowAllocateValueFailure: false,
+                multipleSuccessfulSolvers: false
             })
         )
     {

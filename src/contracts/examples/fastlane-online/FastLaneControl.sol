@@ -49,7 +49,8 @@ contract FastLaneOnlineControl is DAppControl, FastLaneOnlineErrors {
                 trustedOpHash: false,
                 invertBidValue: false,
                 exPostBids: false,
-                allowAllocateValueFailure: false
+                allowAllocateValueFailure: false,
+                multipleSuccessfulSolvers: false
             })
         )
     { }

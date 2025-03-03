@@ -55,7 +55,8 @@ contract TrebleSwapDAppControl is DAppControl {
                 trustedOpHash: false,
                 invertBidValue: false,
                 exPostBids: false,
-                allowAllocateValueFailure: false
+                allowAllocateValueFailure: false,
+                multipleSuccessfulSolvers: false
             })
         )
     { }

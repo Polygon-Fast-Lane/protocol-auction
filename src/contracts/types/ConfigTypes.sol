@@ -76,6 +76,9 @@ struct CallConfig {
     // allowAllocateValueFailure: If true, the metacall will proceed even if the value allocation fails. If false, the
     // metacall will revert if the value allocation fails.
     bool allowAllocateValueFailure;
+    // multipleSolvers: If true, the metacall will proceed even if a solver successfully pays their bid, and will be
+    // charged in gas as if it was reverted. If false, the auction ends after the first successful solver.
+    bool multipleSuccessfulSolvers;
 }
 
 enum CallConfigIndex {
@@ -100,5 +103,6 @@ enum CallConfigIndex {
     TrustedOpHash,
     InvertBidValue,
     ExPostBids,
-    AllowAllocateValueFailure
+    AllowAllocateValueFailure,
+    MultipleSuccessfulSolvers
 }

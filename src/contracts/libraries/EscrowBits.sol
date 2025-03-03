@@ -37,7 +37,7 @@ library EscrowBits {
             | 1 << uint256(SolverOutcome.InvertedBidExceedsCeiling) // <- detected by EE
             | 1 << uint256(SolverOutcome.BalanceNotReconciled) // <- detected by Escrow
             | 1 << uint256(SolverOutcome.CallbackNotCalled) // <- detected by Escrow
-            | 1 << uint256(SolverOutcome.EVMError)
+            | 1 << uint256(SolverOutcome.EVMError) | 1 << uint256(SolverOutcome.MultipleSolvers)
     ); // <- default if err by EE
 
     function canExecute(uint256 result) internal pure returns (bool) {

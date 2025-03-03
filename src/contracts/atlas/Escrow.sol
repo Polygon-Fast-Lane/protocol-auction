@@ -204,13 +204,25 @@ abstract contract Escrow is AtlETH {
                 // Execute the solver call
                 (_result, _solverTracker) = _solverOpWrapper(ctx, solverOp, bidAmount, _gasLimit, returnData);
 
+                // First successful solver call that paid what it bid
                 if (_result.executionSuccessful()) {
-                    // First successful solver call that paid what it bid
+                    // Emit event
                     emit SolverTxResult(
                         solverOp.solver, solverOp.from, dConfig.to, solverOp.bidToken, bidAmount, true, true, _result
                     );
 
-                    ctx.solverSuccessful = true;
+                    // Keep executing solvers without ending the auction if multipleSuccessfulSolvers is set
+                    if (CallBits.multipleSuccessfulSolvers(dConfig.callConfig)) {
+                        _result = 1 << (uint256(SolverOutcome.MultipleSolvers));
+
+                        // In multipleSuccessfulSolvers solvers must each pay a FULL_REFUND.
+                        _handleSolverAccounting(solverOp, _gasWaterMark, _result, !prevalidated);
+
+                        // End auction with first successful solver that paid what it bid
+                    } else {
+                        // Mark as complete
+                        ctx.solverSuccessful = true;
+                    }
                     ctx.solverOutcome = uint24(_result);
                     return _solverTracker.bidAmount;
                 }
@@ -221,6 +233,7 @@ abstract contract Escrow is AtlETH {
         ctx.solverOutcome = uint24(_result);
 
         // Account for failed SolverOperation gas costs
+        // In multipleSuccessfulSolvers solvers must each pay a FULL_REFUND.
         _handleSolverAccounting(solverOp, _gasWaterMark, _result, !prevalidated);
 
         emit SolverTxResult(

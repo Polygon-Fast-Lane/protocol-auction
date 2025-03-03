@@ -78,7 +78,8 @@ contract ChainlinkDAppControl is DAppControl {
                 trustedOpHash: true,
                 invertBidValue: false,
                 exPostBids: false,
-                allowAllocateValueFailure: false
+                allowAllocateValueFailure: false,
+                multipleSuccessfulSolvers: false
             })
         )
     { }

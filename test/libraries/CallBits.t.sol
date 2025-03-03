@@ -35,7 +35,8 @@ contract CallBitsTest is Test {
             trustedOpHash: true,
             invertBidValue: false,
             exPostBids: true,
-            allowAllocateValueFailure: false
+            allowAllocateValueFailure: false,
+            multipleSuccessfulSolvers: false
         });
 
         callConfig2 = CallConfig({
@@ -59,7 +60,8 @@ contract CallBitsTest is Test {
             trustedOpHash: !callConfig1.trustedOpHash,
             invertBidValue: !callConfig1.invertBidValue,
             exPostBids: !callConfig1.exPostBids,
-            allowAllocateValueFailure: !callConfig1.allowAllocateValueFailure
+            allowAllocateValueFailure: !callConfig1.allowAllocateValueFailure,
+            multipleSuccessfulSolvers: !callConfig1.multipleSuccessfulSolvers
         });
     }
 
@@ -71,7 +73,7 @@ contract CallBitsTest is Test {
             "callConfig1 incorrect"
         );
 
-        expectedBitMapString = "00000000000101010101010101010101";
+        expectedBitMapString = "00000000001101010101010101010101";
         assertEq(
             TestUtils.uint32ToBinaryString(CallBits.encodeCallConfig(callConfig2)),
             expectedBitMapString,
